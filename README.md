@@ -1,2 +1,0 @@
-# unraid-nvidia-driver
-
