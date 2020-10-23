@@ -115,6 +115,7 @@ echo "----------------------------------------"
 echo "---Uninstalling Nvidia driver package---"
 echo "----------------------------------------"
 # Remove plugin related files
+removepkg &name;-&version;
 rm -rf /usr/local/emhttp/plugins/&name;
 rm -rf &plugin;/packages
 sed -i '/first_installation=false/c\first_installation=true' "&plugin;/settings.cfg"
