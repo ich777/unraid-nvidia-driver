@@ -35,7 +35,7 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version
 <INLINE>
 **Nvidia Driver**
 
-This is the initial release from the Nvidia-Driver-Package for Unraid v6.9.0-beta31 with Nvidia driver v455.28
+Initial release from the Nvidia-Driver-Package for Unraid v6.9.0-beta31 with Nvidia driver v455.28
 </INLINE>
 </FILE>
 
@@ -61,19 +61,24 @@ fi
 download() {
 #Download Nvidia Driver Package
 if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz" "https://s3.amazonaws.com/dnld.lime-technology.com/next/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz" ; then
-  echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}---"
+  echo
+  echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}----"
 else
-  echo "---Something went wrong, can't download Nvidia Driver Package v${NV_DRV_V}---"
+  echo
+  echo "-------Can't download Nvidia Driver Package v${NV_DRV_V}--------"
   exit 1
 fi
 }
 
 check() {
 if [ ! -f &plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz ]; then
-  echo "---Downloading Nvidia Driver Package v${NV_DRV_V}, this can take some time!---"
+  echo
+  echo "---------Downloading Nvidia Driver Package v${NV_DRV_V}!--------"
+  echo "---This could take some time, please don't close this window!---"
   download
 else
-  echo "---Nvidia driver v${NV_DRV_V} found locally---"
+  echo
+  echo "------------Nvidia driver v${NV_DRV_V} found locally------------"
 fi
 }
 
@@ -88,21 +93,21 @@ modprobe nvidia  >> /dev/null
 check
 
 #Install Nvidia Driver Package
-echo "---Installing Nvidia Driver Package v${NV_DRV_V}---"
+echo
+echo "---------Installing Nvidia Driver Package v${NV_DRV_V}----------"
 install > /dev/null
 
 #Display message to disable and enable Docker on first installation or display successfull message
 if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
   /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'" -i "alert"
   sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
-  echo "---Installation of Nvidia Driver Package v${NV_DRV_V} successfull---"
+  echo
+  echo "-----Installation of Nvidia driver v${NV_DRV_V} successfull-----"
   echo
   echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'"
-  echo
 else
   echo
-  echo "---Installation of Nvidia Driver Package v${NV_DRV_V} successfull---"
-  echo
+  echo "-----Installation of Nvidia driver v${NV_DRV_V} successfull-----"
 fi
 
 </INLINE>
@@ -120,7 +125,7 @@ rm -rf /usr/local/emhttp/plugins/&name;
 rm -rf &plugin;/packages
 sed -i '/first_installation=false/c\first_installation=true' "&plugin;/settings.cfg"
 echo
-echo "---Nvidia Driver Package uninstalled, please reboot your server!---"
+echo "-----Nvidia Driver uninstalled, please reboot your server!------"
 
 </INLINE>
 </FILE>
