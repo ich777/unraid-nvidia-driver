@@ -1,0 +1,129 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN [
+  <!ENTITY name      "nvidia-driver">
+  <!ENTITY author    "ich777">
+  <!ENTITY version   "2020.10.23">
+  <!ENTITY launch    "Settings/nvidia-driver">
+  <!ENTITY gitURL    "https://github.com/&author;/unraid-nvidia-driver/raw/master">
+  <!ENTITY pluginURL "&gitURL;/&name;.plg">
+  <!ENTITY plugin    "/boot/config/plugins/&name;">
+  <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
+]>
+
+<PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31">
+
+<CHANGES>
+
+###2020.10.23
+Initial release
+
+</CHANGES>
+
+<FILE Run="/bin/bash">
+<INLINE>
+rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version;')
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/&name;/&name;-&version;.txz" Run="upgradepkg --install-new">
+<URL>&gitURL;/packages/&name;-&version;.txz</URL>
+<MD5>&md5;</MD5>
+</FILE>
+
+<FILE Name="/boot/config/plugins/&name;/unraid-kernel.png">
+<URL>https://raw.githubusercontent.com/ich777/docker-templates/master/ich777/images/nvidia-driver.png</URL>
+</FILE>
+
+<FILE Name="&emhttp;/README.md">
+<INLINE>
+**Nvidia Driver**
+
+This is the initial release from the Nvidia-Driver-Package for Unraid v6.9.0-beta31 with Nvidia driver v455.28
+</INLINE>
+</FILE>
+
+<FILE Run="/bin/bash">
+<INLINE>
+
+#Create settings file if not found
+if [ ! -f "&plugin;/settings.cfg" ]; then
+  echo 'first_installation=true' > "&plugin;/settings.cfg"
+fi
+
+KERNEL_V="$(uname -r)"
+NV_DRV_V="latest"
+
+if [ "${NV_DRV_V}" == "latest" ]; then
+    NV_DRV_V="455.28"
+fi
+
+if [ ! -d "&plugin;/packages" ]; then
+  mkdir -p "&plugin;/packages"
+fi
+
+download() {
+#Download Nvidia Driver Package
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz" "https://s3.amazonaws.com/dnld.lime-technology.com/next/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz" ; then
+  echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}---"
+else
+  echo "---Something went wrong, can't download Nvidia Driver Package v${NV_DRV_V}---"
+  exit 1
+fi
+}
+
+check() {
+if [ ! -f &plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz ]; then
+  echo "---Downloading Nvidia Driver Package v${NV_DRV_V}, this can take some time!---"
+  download
+else
+  echo "---Nvidia driver v${NV_DRV_V} found locally---"
+fi
+}
+
+install() {
+#Install driver package
+/sbin/installpkg "&plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz"
+depmod >> /dev/null
+modprobe nvidia  >> /dev/null
+}
+
+#Check if Nvidia Driver Package is already downloaded
+check
+
+#Install Nvidia Driver Package
+echo "---Installing Nvidia Driver Package v${NV_DRV_V}---"
+install > /dev/null
+
+#Display message to disable and enable Docker on first installation or display successfull message
+if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
+  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'" -i "alert"
+  sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
+  echo "---Installation of Nvidia Driver Package v${NV_DRV_V} successfull---"
+  echo
+  echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'"
+  echo
+else
+  echo
+  echo "---Installation of Nvidia Driver Package v${NV_DRV_V} successfull---"
+  echo
+fi
+
+</INLINE>
+</FILE>
+
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+
+echo "----------------------------------------"
+echo "---Uninstalling Nvidia driver package---"
+echo "----------------------------------------"
+# Remove plugin related files
+rm -rf /usr/local/emhttp/plugins/&name;
+rm -rf &plugin;/packages
+sed -i '/first_installation=false/c\first_installation=true' "&plugin;/settings.cfg"
+echo
+echo "---Nvidia Driver Package uninstalled, please reboot your server!---"
+
+</INLINE>
+</FILE>
+</PLUGIN>
