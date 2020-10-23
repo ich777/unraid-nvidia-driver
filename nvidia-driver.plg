@@ -60,7 +60,7 @@ fi
 
 download() {
 #Download Nvidia Driver Package
-if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz" "https://s3.amazonaws.com/dnld.lime-technology.com/next/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz" ; then
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz" "https://s3.amazonaws.com/dnld.lime-technology.com/drivers/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" ; then
   echo
   echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}----"
 else
