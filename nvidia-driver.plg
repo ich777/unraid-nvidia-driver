@@ -122,7 +122,7 @@ echo "----------------------------------------"
 # Remove plugin related files
 removepkg &name;-&version;
 rm -rf /usr/local/emhttp/plugins/&name;
-rm -rf &plugin;/packages
+rm -rf &plugin;
 sed -i '/first_installation=false/c\first_installation=true' "&plugin;/settings.cfg"
 echo
 echo "-----Nvidia Driver uninstalled, please reboot your server!------"
