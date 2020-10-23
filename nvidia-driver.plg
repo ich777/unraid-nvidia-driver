@@ -60,7 +60,7 @@ fi
 
 download() {
 #Download Nvidia Driver Package
-if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1.tgz" "https://s3.amazonaws.com/dnld.lime-technology.com/drivers/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" ; then
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-x86_64-${KERNEL_V}-1.tgz" "https://s3.amazonaws.com/dnld.lime-technology.com/drivers/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" ; then
   echo
   echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}----"
 else
@@ -71,7 +71,7 @@ fi
 }
 
 check() {
-if [ ! -f &plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1.tgz ]; then
+if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-x86_64-${KERNEL_V}-1.tgz ]; then
   echo
   echo "-----------Downloading Nvidia Driver Package v${NV_DRV_V}------------"
   echo "---This could take some time, please don't close this window!---"
@@ -84,7 +84,7 @@ fi
 
 install() {
 #Install driver package
-/sbin/installpkg "&plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1.tgz"
+/sbin/installpkg "&plugin;/packages/nvidia-${NV_DRV_V}-x86_64-${KERNEL_V}-1.tgz"
 depmod >> /dev/null
 modprobe nvidia  >> /dev/null
 }
