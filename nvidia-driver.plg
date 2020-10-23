@@ -31,10 +31,6 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version
 <MD5>&md5;</MD5>
 </FILE>
 
-<FILE Name="/boot/config/plugins/&name;/unraid-kernel.png">
-<URL>https://raw.githubusercontent.com/ich777/docker-templates/master/ich777/images/nvidia-driver.png</URL>
-</FILE>
-
 <FILE Name="&emhttp;/README.md">
 <INLINE>
 **Nvidia Driver**
