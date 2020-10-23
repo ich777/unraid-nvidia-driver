@@ -73,7 +73,7 @@ fi
 check() {
 if [ ! -f &plugin;/packages/nvidia-driver-${NV_DRV_V}-x86_64-${KERNEL_V}-1_SBo.tgz ]; then
   echo
-  echo "---------Downloading Nvidia Driver Package v${NV_DRV_V}!--------"
+  echo "-----------Downloading Nvidia Driver Package v${NV_DRV_V}------------"
   echo "---This could take some time, please don't close this window!---"
   download
 else
