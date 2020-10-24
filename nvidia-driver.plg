@@ -44,14 +44,28 @@ Initial release from the Nvidia-Driver-Package for Unraid v6.9.0-beta31 with Nvi
 
 #Create settings file if not found
 if [ ! -f "&plugin;/settings.cfg" ]; then
-  echo 'first_installation=true' > "&plugin;/settings.cfg"
+  echo 'first_installation=true
+driver_version=latest' > "&plugin;/settings.cfg"
 fi
 
+#Set variables
 KERNEL_V="$(uname -r)"
-NV_DRV_V="latest"
+DRIVER_AVAIL="$(wget -qO- https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
+NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 
+#Check Nvidia driver version and set download variable, if Nvidia driver version is not found for this kernel fall back to latest
 if [ "${NV_DRV_V}" == "latest" ]; then
-    NV_DRV_V="455.28"
+    DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
+    NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
+else
+    DL_DRV="$(echo "$DRIVER_AVAIL" | grep "$NV_DRV_V" | cut -d ' ' -f2-)"
+    if [ -z "${DL_DRV}" ]; then
+      NV_DRV_OLD=${NV_DRV_V}
+      DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
+      NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
+      echo
+      echo "---Can't find Nvidia Driver v${NV_DRV_OLD} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v${NV_DRV_V}---"
+    fi
 fi
 
 if [ ! -d "&plugin;/packages" ]; then
@@ -60,8 +74,8 @@ fi
 
 download() {
 #Download Nvidia Driver Package
-if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "https://s3.amazonaws.com/dnld.lime-technology.com/drivers/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" ; then
-  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(wget -qO- "https://s3.amazonaws.com/dnld.lime-technology.com/drivers/nvidia-${NV_DRV_V}-${KERNEL_V}-1.md5" | cut -d ' ' -f1)" ]; then
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "$(echo "$DL_DRV" | cut -d ' ' -f2)" ; then
+  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(echo "$DL_DRV" | cut -d ' ' -f3)" ]; then
     echo
     echo "---CHECKSUM ERROR!---"
     exit 1
