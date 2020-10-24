@@ -19,6 +19,7 @@
 json parsing
 md5 hash check
 fallback to latest Nvidia version if version for current Kernel isn't found
+fallback to local Nvidia version if no Internet connection is available or parsing of relese.json failed
 
 ###2020.10.23
 Initial release
@@ -50,26 +51,49 @@ Initial release from the Nvidia-Driver-Package for Unraid v6.9.0-beta31 with Nvi
 #Create settings file if not found
 if [ ! -f "&plugin;/settings.cfg" ]; then
   echo 'first_installation=true
-driver_version=latest' > "&plugin;/settings.cfg"
+driver_version=latest
+local_version=none' > "&plugin;/settings.cfg"
 fi
 
 #Set variables
 KERNEL_V="$(uname -r)"
-DRIVER_AVAIL="$(wget -qO- https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
+DRIVER_AVAIL="$(wget -qO- -T10 https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
 NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 
-#Check Nvidia driver version and set download variable, if Nvidia driver version is not found for this kernel fall back to latest
+#Check Nvidia driver version and set download variable, if Nvidia driver version
+#is not found for this kernel fall back to latest, if no Internet connection or parsing of
+#release.json failed fall back to local installed version if no local version is found exit.
 if [ "${NV_DRV_V}" == "latest" ]; then
-    DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
-    NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
-else
-    DL_DRV="$(echo "$DRIVER_AVAIL" | grep "$NV_DRV_V" | cut -d ' ' -f2-)"
-    if [ -z "${DL_DRV}" ]; then
-      NV_DRV_OLD=${NV_DRV_V}
+    if [ -z "$DRIVER_AVAIL" ]; then
+      if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
+        echo
+        echo "---Can't get latest Nvidia driver version and found no installed local driver---"
+        exit 1
+      else
+        NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
+      fi
+    else
       DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
       NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
-      echo
-      echo "---Can't find Nvidia Driver v${NV_DRV_OLD} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v${NV_DRV_V}---"
+    fi
+else
+    if [ -z "$DRIVER_AVAIL" ]; then
+      if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
+        echo
+        echo "---Can't get latest Nvidia driver version and found no installed local driver---"
+        exit 1
+      else
+        NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
+      fi
+    else
+      DL_DRV="$(echo "$DRIVER_AVAIL" | grep "$NV_DRV_V" | cut -d ' ' -f2-)"
+      if [ -z "${DL_DRV}" ]; then
+        NV_DRV_OLD=${NV_DRV_V}
+        DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
+        NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
+        echo
+        echo "---Can't find Nvidia Driver v${NV_DRV_OLD} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v${NV_DRV_V}---"
+      fi
     fi
 fi
 
@@ -85,6 +109,7 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packag
     echo "---CHECKSUM ERROR!---"
     exit 1
   fi
+  sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
   echo
   echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}----"
 else
