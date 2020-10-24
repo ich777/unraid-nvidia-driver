@@ -61,6 +61,11 @@ fi
 download() {
 #Download Nvidia Driver Package
 if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "https://s3.amazonaws.com/dnld.lime-technology.com/drivers/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" ; then
+  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(wget -qO- "https://s3.amazonaws.com/dnld.lime-technology.com/drivers/nvidia-${NV_DRV_V}-${KERNEL_V}-1.md5" | cut -d ' ' -f1)" ]; then
+    echo
+    echo "---CHECKSUM ERROR!---"
+    exit 1
+  fi
   echo
   echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}----"
 else
