@@ -19,7 +19,7 @@
 json parsing
 md5 hash check
 fallback to latest Nvidia version if version for current Kernel isn't found
-fallback to local Nvidia version if no Internet connection is available or parsing of relese.json failed
+fallback to local Nvidia version if no Internet connection is available or parsing of release.json failed
 
 ###2020.10.23
 Initial release
