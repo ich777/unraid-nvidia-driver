@@ -1,0 +1,62 @@
+Menu="Utilities"
+Title="Nvidia Driver"
+Icon="nvidia-driver.png"
+---
+<h1 style="text-align: center;"><a href="https://forums.unraid.net/" target="_blank" rel="noopener"><span style="color: #800000;">Nvidia Driver Package</span></a></h1>
+<p style="text-align: center;">Initial release from the Nvidia Driver Package for Unraid v6.9.0-beta31 with Nvidia driver v455.28</p>
+<p>&nbsp;</p>
+<div style="width: 50%; float:left">
+	<div id="title">
+		<span class="left"></span>
+	</div>
+    	<table class="settings">
+
+			<tr>
+				<td><b><font size="+1">nVidia Info:</font></b></td>
+			</tr>
+
+			<tr>
+				<td>Nvidia Driver Version:</td>
+						<td style="color:green"><b><?=`nvidia-smi | grep "Driver Version" | cut -d ' ' -f3`?></b></td>
+			</tr>
+
+			<tr>
+				<td>Installed GPU(s):</td>
+						<td style="color:green"><b><?=`nvidia-smi --query-gpu=index,name,gpu_bus_id,uuid --format=csv,noheader | tr "," "\n" | sed 's/^[ \t]*//' | sed -e s/00000000://g | sed '0~4G' | sed 's/^[0-9]$/&:/' | sed 's/$/<br>/'
+0:<br>`?></b></td>
+			</tr>
+
+
+	</table>
+
+</div>
+
+<div style="width: 50%; float:left">
+	<div id="title">
+		<span class="left"></span>
+	</div>
+    	<table align="right">
+<table class="settings">
+
+			<tr>
+				<td><b><font size="+1">System Info</font></b></td>
+			</tr>
+
+			<tr>
+				<td>Unraid Version:</td>
+						<td style="color: #99cc00;"><b><?=`cat /etc/unraid-version | cut -d '"' -f2`?></b></td>
+			</tr>
+
+			<tr>
+				<td>Kernel:</td>
+						<td style="color: #99cc00;"><b><?=`uname -r`?></b></td>
+			</tr>
+
+			<tr>
+				<td>Compile Date:</td>
+						<td style="color: #99cc00;"><b><?=`uname -v | cut -d ' ' -f3-`?></b></td>
+			</tr>
+
+
+  </table>
+</div>
