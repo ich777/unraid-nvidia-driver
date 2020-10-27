@@ -6,7 +6,7 @@
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "eaee4d175ef96903443dee3abf3c80c1">
+  <!ENTITY md5       "29dc41318831c4f491d81df661428549">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -17,6 +17,7 @@
 
 ###2020.10.27
 added check if enough space is available on USB boot device
+description of Plugin page and link changed
 
 ###2020.10.24
 json parsing
