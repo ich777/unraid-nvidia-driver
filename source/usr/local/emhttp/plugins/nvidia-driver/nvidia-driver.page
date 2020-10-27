@@ -2,61 +2,132 @@ Menu="Utilities"
 Title="Nvidia Driver"
 Icon="nvidia-driver.png"
 ---
+<?php
+//Update driver versions and create file '/tmp/nvidia_driver'
+shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update');
+
+$latest_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_latest_version');
+
+//Read driver versions from '/tmp/nvidia_driver'
+error_reporting(E_ALL);
+ini_set('display_errors',1);
+
+$filename = "/tmp/nvidia_driver";
+$eachlines = file($filename, FILE_IGNORE_NEW_LINES);
+?>
+
+<script>
+//Don't execute commands again if page is refreshed
+    if ( window.history.replaceState ) {
+        window.history.replaceState( null, null, window.location.href );
+    }
+</script>
+
+<script>
+//Disable submit button if no radio button is selected
+$(function(){
+    $("input[type='radio']").change(function(){
+
+        $("input[type='submit']").prop("disabled", false);
+        //Or
+        //$("input[type='submit']").removeAttr("disabled");
+    });
+});
+</script>
+
 <h1 style="text-align: center;"><a href="https://forums.unraid.net/" target="_blank" rel="noopener"><span style="color: #800000;">Nvidia Driver Package</span></a></h1>
-<p style="text-align: center;">Initial release from the Nvidia Driver Package for Unraid v6.9.0-beta31 with Nvidia driver v455.28</p>
-<p>&nbsp;</p>
-<div style="width: 50%; float:left">
-	<div id="title">
-		<span class="left"></span>
-	</div>
-    	<table class="settings">
-
-			<tr>
-				<td><b><font size="+1">nVidia Info:</font></b></td>
-			</tr>
-
-			<tr>
-				<td>Nvidia Driver Version:</td>
-						<td style="color:green"><b><?=`nvidia-smi | grep "Driver Version" | cut -d ' ' -f3`?></b></td>
-			</tr>
-
-			<tr>
-				<td>Installed GPU(s):</td>
-						<td style="color:green"><b><?=`nvidia-smi --query-gpu=index,name,gpu_bus_id,uuid --format=csv,noheader | tr "," "\n" | sed 's/^[ \t]*//' | sed -e s/00000000://g | sed '0~4G' | sed 's/^[0-9]$/&:/' | sed 's/$/<br>/'
-0:<br>`?></b></td>
-			</tr>
-
-
-	</table>
-
-</div>
+<p style="text-align: center;">This plugin displays informations about your installed Nvidia GPU(s) and you can change you preferred driver version for this Unraid version.</p>
 
 <div style="width: 50%; float:left">
-	<div id="title">
-		<span class="left"></span>
-	</div>
-    	<table align="right">
-<table class="settings">
-
-			<tr>
-				<td><b><font size="+1">System Info</font></b></td>
-			</tr>
-
-			<tr>
-				<td>Unraid Version:</td>
-						<td style="color: #99cc00;"><b><?=`cat /etc/unraid-version | cut -d '"' -f2`?></b></td>
-			</tr>
-
-			<tr>
-				<td>Kernel:</td>
-						<td style="color: #99cc00;"><b><?=`uname -r`?></b></td>
-			</tr>
-
-			<tr>
-				<td>Compile Date:</td>
-						<td style="color: #99cc00;"><b><?=`uname -v | cut -d ' ' -f3-`?></b></td>
-			</tr>
-
-
-  </table>
+    <div id="title">
+        <span class="left"></span>
+    </div>
+    <table class="settings">
+        <tr>
+            <td><b><font size="+1">nVidia Info:</font></b></td>
+        </tr>
+        <tr>
+            <td>Nvidia Driver Version:</td>
+            <td style="color:green"><b><?=`nvidia-smi | grep "Driver Version" | cut -d ' ' -f3`?></b></td>
+        </tr>
+        <tr>
+            <td>Installed GPU(s):</td>
+            <td style="color:green"><b><?=`nvidia-smi --query-gpu=index,name,gpu_bus_id,uuid --format=csv,noheader | tr "," "\n" | sed 's/^[ \t]*//' | sed -e s/00000000://g | sed '0~4G' | sed 's/^[0-9]$/&:/' | sed 's/$/<br>/'`?></b></td>
+        </tr>
+    </table>
 </div>
+
+<div style="width: 50%; float:right">
+    <div id="title">
+        <span class="right"></span>
+    </div>
+    <table class="settings">
+        <tr>
+            <td><b><font size="+1">Select preferred driver version:</font></b></td>
+        </tr>
+        <tr>            
+            <form id="s" method="post" >
+                <td>Versions:</td>
+                <td>
+                    <p><input type="radio" name="drv_version" value="latest"/> latest = <?php echo "v$latest_v"; ?> </p>
+                    <?php foreach($eachlines as $lines){
+                    $arr = explode(" ", $lines);
+                    $arr = array_splice($arr, 1, 1);
+                    $lines2 = implode(" ", $arr);
+                    echo "<p><input type=\"radio\" name=\"drv_version\" value=\"$lines2\"/> v$lines2</p>";
+                    }
+                    ?>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                </td>
+                <td>
+                    <p><input name="updatedrvv" disabled="disabled" type="submit" value="Update"/></p>
+                </td>
+            </tr>
+            </form>
+    </table>
+<p style="text-align: left; font-weight: bold;">ATTENTION: If you set the version to 'latest' the plugin will check on every restart if a newer driver is available and download it.<br>Please keep in mind that the boot process can take longer than normal since the plugin downloads and installs the newer driver on boot.</p>
+</div>
+
+<?php
+//Post driver version
+if(isset($_POST['updatedrvv'])) {
+$drv_version = $_POST["drv_version"];
+if ($drv_version == "latest"){
+shell_exec("logger ---Nvidia driver v$latest_v will be downloaded and installed at next reboot---");
+shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
+shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$latest_v\" -i \"alert\"");
+} else {
+shell_exec("logger ---Nvidia driver v$drv_version will be downloaded and installed at next reboot---");
+shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
+shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$drv_version\" -i \"alert\"");
+}
+}
+?>
+
+<div style="width: 50%; float:left">
+    <div id="title">
+        <span class="left"></span>
+    </div>
+    <table class="settings">
+        <tr>
+            <td><b><font size="+1">System Info</font></b></td>
+        </tr>
+        <tr>
+            <td>Unraid Version:</td>
+            <td style="color: #99cc00;"><b><?=`cat /etc/unraid-version | cut -d '"' -f2`?></b></td>
+        </tr>
+        <tr>
+            <td>Kernel:</td>
+            <td style="color: #99cc00;"><b><?=`uname -r`?></b></td>
+        </tr>
+        <tr>
+        <td>Compile Date:</td>
+            <td style="color: #99cc00;"><b><?=`uname -v | cut -d ' ' -f3-`?></b></td>
+        </tr>
+    </table>
+</div>
+
+
