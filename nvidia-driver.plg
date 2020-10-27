@@ -18,6 +18,7 @@
 ###2020.10.27
 added check if enough space is available on USB boot device
 description of Plugin page and link changed
+added driver version selection
 
 ###2020.10.24
 json parsing
