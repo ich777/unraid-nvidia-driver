@@ -16,18 +16,18 @@
 <CHANGES>
 
 ###2020.10.27
-added check if enough space is available on USB boot device
-description of Plugin page and link changed
-added driver version selection
+- added check if enough space is available on USB boot device
+- description of Plugin page and link changed
+- added driver version selection
 
 ###2020.10.24
-json parsing
-md5 hash check
-fallback to latest Nvidia version if version for current Kernel isn't found
-fallback to local Nvidia version if no Internet connection is available or parsing of release.json failed
+- json parsing
+- md5 hash check
+- fallback to latest Nvidia version if version for current Kernel isn't found
+- fallback to local Nvidia version if no Internet connection is available or parsing of release.json failed
 
 ###2020.10.23
-Initial release
+- Initial release
 
 </CHANGES>
 
