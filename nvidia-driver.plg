@@ -185,7 +185,10 @@ removepkg &name;-&version;
 rm -rf /usr/local/emhttp/plugins/&name;
 rm -rf &plugin;
 echo
+echo "--------------------------------------------------------------------------------"
 echo "-------------Nvidia Driver uninstalled, please reboot your server!--------------"
+echo "--------------------------------------------------------------------------------"
+echo
 
 </INLINE>
 </FILE>
