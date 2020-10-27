@@ -2,9 +2,9 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2020.10.24">
+  <!ENTITY version   "2020.10.27">
   <!ENTITY launch    "Settings/nvidia-driver">
-  <!ENTITY gitURL    "https://github.com/&author;/unraid-nvidia-driver/raw/master">
+  <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
   <!ENTITY md5       "eaee4d175ef96903443dee3abf3c80c1">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
