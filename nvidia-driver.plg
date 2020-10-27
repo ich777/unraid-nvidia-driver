@@ -15,6 +15,9 @@
 
 <CHANGES>
 
+###2020.10.27
+added check if enough space is available on USB boot device
+
 ###2020.10.24
 json parsing
 md5 hash check
@@ -101,8 +104,8 @@ if [ ! -d "&plugin;/packages" ]; then
   mkdir -p "&plugin;/packages"
 fi
 
-download() {
 #Download Nvidia Driver Package
+download() {
 if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "$(echo "$DL_DRV" | cut -d ' ' -f2)" ; then
   if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(echo "$DL_DRV" | cut -d ' ' -f3)" ]; then
     echo
@@ -111,28 +114,36 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packag
   fi
   sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
   echo
-  echo "---Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}----"
+  echo "-----------Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}-------------"
 else
   echo
-  echo "-------Can't download Nvidia Driver Package v${NV_DRV_V}--------"
+  echo "---------------Can't download Nvidia Driver Package v${NV_DRV_V}-----------------"
   exit 1
 fi
 }
 
+#Check if driver is already downloaded and if there is enough space on USB Boot device
 check() {
 if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
+  AVAIL_SPACE="$(df --output=target,avail | grep -e "/boot" | awk '{ print $2 }')"
+  REQ_SPACE="$((( "$(echo "$DL_DRV" | head -1 | cut -d ' ' -f4)" / 1000 )))"
+  if [ ${AVAIL_SPACE} -le ${REQ_SPACE} ]; then
+    echo
+    echo "---Not enough free space on USB Boot device to download Nvidia Driver Package---"
+    exit 1
+  fi
   echo
-  echo "-----------Downloading Nvidia Driver Package v${NV_DRV_V}------------"
-  echo "---This could take some time, please don't close this window!---"
+  echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
+  echo "-----------This could take some time, please don't close this window!-----------"
   download
 else
   echo
-  echo "------------Nvidia driver v${NV_DRV_V} found locally------------"
+  echo "--------------------Nvidia driver v${NV_DRV_V} found locally---------------------"
 fi
 }
 
-install() {
 #Install driver package
+install() {
 /sbin/installpkg "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz"
 depmod >> /dev/null
 modprobe nvidia  >> /dev/null
@@ -143,7 +154,7 @@ check
 
 #Install Nvidia Driver Package
 echo
-echo "---------Installing Nvidia Driver Package v${NV_DRV_V}----------"
+echo "-----------------Installing Nvidia Driver Package v${NV_DRV_V}-------------------"
 install > /dev/null
 
 #Display message to disable and enable Docker on first installation or display successfull message
@@ -151,12 +162,12 @@ if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" ==
   /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'" -i "alert"
   sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
   echo
-  echo "-----Installation of Nvidia driver v${NV_DRV_V} successfull-----"
+  echo "------------Installation of Nvidia driver v${NV_DRV_V} successfull---------------"
   echo
   echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'"
 else
   echo
-  echo "-----Installation of Nvidia driver v${NV_DRV_V} successfull-----"
+  echo "--------------Installation of Nvidia driver v${NV_DRV_V} successfull-------------"
 fi
 
 </INLINE>
@@ -173,7 +184,7 @@ removepkg &name;-&version;
 rm -rf /usr/local/emhttp/plugins/&name;
 rm -rf &plugin;
 echo
-echo "-----Nvidia Driver uninstalled, please reboot your server!------"
+echo "-------------Nvidia Driver uninstalled, please reboot your server!--------------"
 
 </INLINE>
 </FILE>
