@@ -82,8 +82,8 @@ if [ "${NV_DRV_V}" == "latest" ]; then
       DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
       NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
       #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls /boot/config/plugins/nvidia-driver/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-      rm -f $(ls /boot/config/plugins/nvidia-driver/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
     fi
 else
     if [ -z "$DRIVER_AVAIL" ]; then
