@@ -19,6 +19,7 @@
 - added check if enough space is available on USB boot device
 - description of Plugin page and link changed
 - added driver version selection
+- added check for old packages
 
 ###2020.10.24
 - json parsing
@@ -80,6 +81,9 @@ if [ "${NV_DRV_V}" == "latest" ]; then
     else
       DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
       NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
+      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
+      rm -f $(ls /boot/config/plugins/nvidia-driver/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
+      rm -f $(ls /boot/config/plugins/nvidia-driver/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
     fi
 else
     if [ -z "$DRIVER_AVAIL" ]; then
