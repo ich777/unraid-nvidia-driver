@@ -165,7 +165,7 @@ install > /dev/null
 
 #Display message to disable and enable Docker on first installation or display successfull message
 if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
-  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'" -i "alert"
+  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'" -i "alert" -l "/Settings/DockerSettings"
   sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
   echo
   echo "------------Installation of Nvidia driver v${NV_DRV_V} successfull---------------"
