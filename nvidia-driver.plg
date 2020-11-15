@@ -52,7 +52,7 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version
 <INLINE>
 **Nvidia Driver**
 
-Initial release from the Nvidia-Driver-Package for Unraid v6.9.0-beta31 with Nvidia driver v455.28
+This Plugin will install the Nvidia drivers to utilize your Nvidia graphics card in your Docker container(s)
 </INLINE>
 </FILE>
 
