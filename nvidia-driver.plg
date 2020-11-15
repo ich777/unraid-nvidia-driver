@@ -2,18 +2,23 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2020.10.27">
+  <!ENTITY version   "2020.11.15">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "27c77be524062678343c8150fdd7bc78">
+  <!ENTITY md5       "c3392a14fc369a74bdbecfefbdf73d3b">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
 
-<PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31">
+<PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2020.11.15
+- Added addtional warning to not close the window until the DONE button is displayed at the first installation
+- Added link to support thread
+
 
 ###2020.10.27
 - added check if enough space is available on USB boot device
@@ -156,6 +161,14 @@ modprobe nvidia  >> /dev/null
 }
 
 #Check if Nvidia Driver Package is already downloaded
+echo
+echo "+=============================================================================="
+echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
+echo "|"
+echo "| Don't close this window with the red 'X' in the top right corner until the 'DONE' button is displayed!"
+echo "|"
+echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
+echo "+=============================================================================="
 check
 
 #Install Nvidia Driver Package
@@ -165,12 +178,12 @@ install > /dev/null
 
 #Display message to disable and enable Docker on first installation or display successfull message
 if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
-  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'" -i "alert"
+  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply" -i "alert" -l "/Settings/DockerSettings"
   sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
   echo
   echo "------------Installation of Nvidia driver v${NV_DRV_V} successfull---------------"
   echo
-  echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes'"
+  echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply"
 else
   echo
   echo "--------------Installation of Nvidia driver v${NV_DRV_V} successfull-------------"
