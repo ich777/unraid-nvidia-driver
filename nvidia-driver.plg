@@ -169,7 +169,13 @@ echo "| Don't close this window with the red 'X' in the top right corner until t
 echo "|"
 echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
 echo "+=============================================================================="
-check
+if [ -f /usr/bin/nvidia-smi ]; then
+  echo
+  echo "-----------------------Nvidia Drivers already installed!-------------------------"
+  exit 0
+else
+  check
+fi
 
 #Install Nvidia Driver Package
 echo
