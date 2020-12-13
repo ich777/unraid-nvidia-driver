@@ -14,6 +14,8 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+###2020.12.13
+- Fixed bug where the plugin folder isn't removed on a failed download
 
 ###2020.11.15
 - Added addtional warning to not close the window until the DONE button is displayed at the first installation
@@ -21,16 +23,16 @@
 
 
 ###2020.10.27
-- added check if enough space is available on USB boot device
-- description of Plugin page and link changed
-- added driver version selection
-- added check for old packages
+- Added check if enough space is available on USB boot device
+- Description of Plugin page and link changed
+- Added driver version selection
+- Added check for old packages
 
 ###2020.10.24
-- json parsing
-- md5 hash check
-- fallback to latest Nvidia version if version for current Kernel isn't found
-- fallback to local Nvidia version if no Internet connection is available or parsing of release.json failed
+- Json parsing
+- MD5 hash check
+- Fallback to latest Nvidia version if version for current Kernel isn't found
+- Fallback to local Nvidia version if no Internet connection is available or parsing of release.json failed
 
 ###2020.10.23
 - Initial release
@@ -77,7 +79,11 @@ NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 if [ "${NV_DRV_V}" == "latest" ]; then
     if [ -z "$DRIVER_AVAIL" ]; then
       if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
+        if [ -d &plugin; ]; then
+          rm -rf &plugin;
+        fi
         echo
+        echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
         echo "---Can't get latest Nvidia driver version and found no installed local driver---"
         exit 1
       else
@@ -93,7 +99,11 @@ if [ "${NV_DRV_V}" == "latest" ]; then
 else
     if [ -z "$DRIVER_AVAIL" ]; then
       if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
+        if [ -d &plugin; ]; then
+          rm -rf &plugin;
+        fi
         echo
+        echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
         echo "---Can't get latest Nvidia driver version and found no installed local driver---"
         exit 1
       else
@@ -119,14 +129,21 @@ fi
 download() {
 if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "$(echo "$DL_DRV" | cut -d ' ' -f2)" ; then
   if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(echo "$DL_DRV" | cut -d ' ' -f3)" ]; then
+    if [ -d &plugin; ]; then
+      rm -rf &plugin;
+    fi
     echo
-    echo "---CHECKSUM ERROR!---"
+    echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
+    echo "--------------------------------CHECKSUM ERROR!---------------------------------"
     exit 1
   fi
   sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
   echo
   echo "-----------Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}-------------"
 else
+  if [ -d &plugin; ]; then
+    rm -rf &plugin;
+  fi
   echo
   echo "---------------Can't download Nvidia Driver Package v${NV_DRV_V}-----------------"
   exit 1
@@ -139,13 +156,17 @@ if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
   AVAIL_SPACE="$(df --output=target,avail | grep -e "/boot" | awk '{ print $2 }')"
   REQ_SPACE="$((( "$(echo "$DL_DRV" | head -1 | cut -d ' ' -f4)" / 1000 )))"
   if [ ${AVAIL_SPACE} -le ${REQ_SPACE} ]; then
+    if [ -d &plugin; ]; then
+      rm -rf &plugin;
+    fi
     echo
+    echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
     echo "---Not enough free space on USB Boot device to download Nvidia Driver Package---"
     exit 1
   fi
   echo
   echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
-  echo "-----------This could take some time, please don't close this window!-----------"
+  echo "-----------This could take some time, please don't close this window!------------"
   download
 else
   echo
