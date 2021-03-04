@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2020.12.13">
+  <!ENTITY version   "2021.03.04">
   <!ENTITY launch    "Settings/nvidia-driver">
-  <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
+  <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/dev">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "c3392a14fc369a74bdbecfefbdf73d3b">
+  <!ENTITY md5       "1c790ec660fa003588f5a56436668298">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -14,6 +14,10 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2020.12.13
+- Changed download repo
+
 ###2020.12.13
 - Fixed bug where the plugin folder isn't removed on a failed download
 
@@ -70,7 +74,7 @@ fi
 
 #Set variables
 KERNEL_V="$(uname -r)"
-DRIVER_AVAIL="$(wget -qO- -T10 https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
+DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-plugins-repo/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
 NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 
 #Check Nvidia driver version and set download variable, if Nvidia driver version
@@ -90,11 +94,8 @@ if [ "${NV_DRV_V}" == "latest" ]; then
         NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
       fi
     else
-      DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
-      NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
-      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+      DL_DRV="$(echo "$DRIVER_AVAIL" | tail -1)"
+      NV_DRV_V="${DL_DRV}"
     fi
 else
     if [ -z "$DRIVER_AVAIL" ]; then
@@ -110,13 +111,20 @@ else
         NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
       fi
     else
-      DL_DRV="$(echo "$DRIVER_AVAIL" | grep "$NV_DRV_V" | cut -d ' ' -f2-)"
+      DL_DRV="$(echo "$DRIVER_AVAIL" | grep "$NV_DRV_V")"
+      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
       if [ -z "${DL_DRV}" ]; then
         NV_DRV_OLD=${NV_DRV_V}
-        DL_DRV="$(echo "$DRIVER_AVAIL" | head -1 | cut -d ' ' -f2-)"
-        NV_DRV_V="$(echo "$DL_DRV" | cut -d ' ' -f1)"
+        DL_DRV="$(echo "$DRIVER_AVAIL" | tail -1)"
+        NV_DRV_V="$(echo "$DL_DRV")"
         echo
         echo "---Can't find Nvidia Driver v${NV_DRV_OLD} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v${NV_DRV_V}---"
+        sed -i '/driver_version=/c\driver_version=latest' "&plugin;/settings.cfg"
+        #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
+        rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
+        rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
       fi
     fi
 fi
@@ -127,8 +135,8 @@ fi
 
 #Download Nvidia Driver Package
 download() {
-if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "$(echo "$DL_DRV" | cut -d ' ' -f2)" ; then
-  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(echo "$DL_DRV" | cut -d ' ' -f3)" ]; then
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "https://github.com/ich777/unraid-plugins-repo/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz" ; then
+  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(wget -qO- "https://github.com/ich777/unraid-plugins-repo/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz.md5" | cut -d ' ' -f1)" ]; then
     if [ -d &plugin; ]; then
       rm -rf &plugin;
     fi
@@ -139,35 +147,23 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packag
   fi
   sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
   echo
-  echo "-----------Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}--------------"
+  echo "----Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}, please wait!-----"
 else
   if [ -d &plugin; ]; then
     rm -rf &plugin;
   fi
   echo
-  echo "---------------Can't download Nvidia Driver Package v${NV_DRV_V}-----------------"
+  echo "--------------Can't download Nvidia Driver Package v${NV_DRV_V}-----------------"
   exit 1
 fi
 }
 
-#Check if driver is already downloaded and if there is enough space on USB Boot device
+#Check if driver is already downloaded
 check() {
 if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
-  AVAIL_SPACE="$(df --output=target,avail | grep -e "/boot" | awk '{ print $2 }')"
-  REQ_SPACE="$((( "$(echo "$DL_DRV" | head -1 | cut -d ' ' -f4)" / 1000 )))"
-  if [ ${AVAIL_SPACE} -le ${REQ_SPACE} ]; then
-    if [ -d &plugin; ]; then
-      rm -rf &plugin;
-    fi
-    echo
-    echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
-    echo "---Not enough free space on USB Boot device to download Nvidia Driver Package---"
-    exit 1
-  fi
   echo
-  echo "--------------------------------CHECKSUM ERROR!---------------------------------"
   echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
-  echo "-----------This could take some time, please don't close this window!-----------"
+  echo "----------This could take some time, please don't close this window!------------"
   download
 else
   echo
