@@ -4,7 +4,7 @@
   <!ENTITY author    "ich777">
   <!ENTITY version   "2021.03.04">
   <!ENTITY launch    "Settings/nvidia-driver">
-  <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/dev">
+  <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
   <!ENTITY md5       "1c790ec660fa003588f5a56436668298">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
