@@ -16,7 +16,7 @@
 <CHANGES>
 
 ###2020.12.13
-- Changed download repo
+- Changed download repo to Github
 
 ###2020.12.13
 - Fixed bug where the plugin folder isn't removed on a failed download
