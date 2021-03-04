@@ -139,7 +139,7 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packag
   fi
   sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
   echo
-  echo "-----------Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}-------------"
+  echo "-----------Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}--------------"
 else
   if [ -d &plugin; ]; then
     rm -rf &plugin;
@@ -165,8 +165,9 @@ if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
     exit 1
   fi
   echo
+  echo "--------------------------------CHECKSUM ERROR!---------------------------------"
   echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
-  echo "-----------This could take some time, please don't close this window!------------"
+  echo "-----------This could take some time, please don't close this window!-----------"
   download
 else
   echo
