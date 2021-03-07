@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.03.04">
+  <!ENTITY version   "2021.03.07">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "1c790ec660fa003588f5a56436668298">
+  <!ENTITY md5       "b32d781ce9314942d6a69762dacf1989">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -15,7 +15,12 @@
 
 <CHANGES>
 
-###2020.12.13
+###2021.03.07
+- Added Download button to WebGUI to download the Nvidia Driver instantly if no internet connection is available at boot
+- Corrected a few typos
+- Display Warning message only when downloading the Nvidia Driver
+
+###2021.03.04
 - Changed download repo to Github
 
 ###2020.12.13
@@ -147,7 +152,7 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packag
   fi
   sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
   echo
-  echo "----Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}, please wait!-----"
+  echo "----Successfully downloaded Nvidia Driver Package v${NV_DRV_V}, please wait!----"
 else
   if [ -d &plugin; ]; then
     rm -rf &plugin;
@@ -161,6 +166,14 @@ fi
 #Check if driver is already downloaded
 check() {
 if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
+  echo
+  echo "+=============================================================================="
+  echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
+  echo "|"
+  echo "| Don't close this window with the red 'X' in the top right corner until the 'DONE' button is displayed!"
+  echo "|"
+  echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
+  echo "+=============================================================================="
   echo
   echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
   echo "----------This could take some time, please don't close this window!------------"
@@ -179,14 +192,6 @@ modprobe nvidia  >> /dev/null
 }
 
 #Check if Nvidia Driver Package is already downloaded
-echo
-echo "+=============================================================================="
-echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
-echo "|"
-echo "| Don't close this window with the red 'X' in the top right corner until the 'DONE' button is displayed!"
-echo "|"
-echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
-echo "+=============================================================================="
 if [ -f /usr/bin/nvidia-smi ]; then
   echo
   echo "-----------------------Nvidia Drivers already installed!-------------------------"
@@ -200,17 +205,17 @@ echo
 echo "-----------------Installing Nvidia Driver Package v${NV_DRV_V}-------------------"
 install > /dev/null
 
-#Display message to disable and enable Docker on first installation or display successfull message
+#Display message to disable and enable Docker on first installation or display successful message
 if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
   /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply" -i "alert" -l "/Settings/DockerSettings"
   sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
   echo
-  echo "------------Installation of Nvidia driver v${NV_DRV_V} successfull---------------"
+  echo "------------Installation of Nvidia driver v${NV_DRV_V} successful----------------"
   echo
   echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply"
 else
   echo
-  echo "--------------Installation of Nvidia driver v${NV_DRV_V} successfull-------------"
+  echo "--------------Installation of Nvidia driver v${NV_DRV_V} successful--------------"
 fi
 
 </INLINE>
