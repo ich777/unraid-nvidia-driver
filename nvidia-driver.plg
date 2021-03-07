@@ -97,10 +97,16 @@ if [ "${NV_DRV_V}" == "latest" ]; then
         exit 1
       else
         NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
+        #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
+        rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
+        rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
       fi
     else
       DL_DRV="$(echo "$DRIVER_AVAIL" | tail -1)"
       NV_DRV_V="${DL_DRV}"
+      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
     fi
 else
     if [ -z "$DRIVER_AVAIL" ]; then
