@@ -94,6 +94,7 @@ if [ -z "$DRIVER_AVAIL" ]; then
 		DL_DRV="$(echo $DRIVER_AVAIL | awk '{print $2}' | head -1)"
 		DL_URL="$(echo $DRIVER_AVAIL | awk '{print $3}' | head -1)"
 		MD5_SUM="$(echo $DRIVER_AVAIL | awk '{print $4}' | head -1)"
+    DRIVER_AVAIL="$(echo $DRIVER_AVAIL | awk '{print $1}' | head -1)"
 		FALLBACK="true"
 	fi
 fi
