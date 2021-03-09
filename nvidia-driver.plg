@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.03.07">
+  <!ENTITY version   "2021.03.09">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "b32d781ce9314942d6a69762dacf1989">
+  <!ENTITY md5       "8313a34d7cddcabe7027026eeb7a6338">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -14,6 +14,10 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.03.09
+- Fixed Radio Buttons not showing current selected driver version
+- Added Fallback URL until update handling is sorted
 
 ###2021.03.07
 - Added Download button to WebGUI to download the Nvidia Driver instantly if no internet connection is available at boot
@@ -79,8 +83,20 @@ fi
 
 #Set variables
 KERNEL_V="$(uname -r)"
-DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-plugins-repo/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
+DRIVER_AVAIL="$(wget -qO- -T10 https://api.github.com/repos/ich777/unraid-plugins-repo/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
 NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
+
+#Fallback until how updates are handled is sorted
+if [ -z "$DRIVER_AVAIL" ]; then
+	echo "---Using Fallback URL---"
+	DRIVER_AVAIL="$(wget -qO- -T10 https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
+	if [ ! -z "$DRIVER_AVAIL" ]; then
+		DL_DRV="$(echo $DRIVER_AVAIL | awk '{print $2}' | head -1)"
+		DL_URL="$(echo $DRIVER_AVAIL | awk '{print $3}' | head -1)"
+		MD5_SUM="$(echo $DRIVER_AVAIL | awk '{print $4}' | head -1)"
+		FALLBACK="true"
+	fi
+fi
 
 #Check Nvidia driver version and set download variable, if Nvidia driver version
 #is not found for this kernel fall back to latest, if no Internet connection or parsing of
@@ -169,6 +185,31 @@ else
 fi
 }
 
+#Download Nvidia Driver Package Fallback
+download_fb() {
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "$(echo "$DL_URL")" ; then
+  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "${MD5_SUM}" ]; then
+    if [ -d &plugin; ]; then
+      rm -rf &plugin;
+    fi
+    echo
+    echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
+    echo "--------------------------------CHECKSUM ERROR!---------------------------------"
+    exit 1
+  fi
+  sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
+  echo
+  echo "-----------Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}-------------"
+else
+  if [ -d &plugin; ]; then
+    rm -rf &plugin;
+  fi
+  echo
+  echo "---------------Can't download Nvidia Driver Package v${NV_DRV_V}-----------------"
+  exit 1
+fi
+}
+
 #Check if driver is already downloaded
 check() {
 if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
@@ -183,7 +224,11 @@ if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
   echo
   echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
   echo "----------This could take some time, please don't close this window!------------"
-  download
+  if [ "${FALLBACK}" == "true" ]; then
+	download_fb
+  else
+	download
+  fi
 else
   echo
   echo "--------------------Nvidia driver v${NV_DRV_V} found locally---------------------"
