@@ -94,7 +94,7 @@ if [ -z "$DRIVER_AVAIL" ]; then
 		DL_DRV="$(echo $DRIVER_AVAIL | awk '{print $2}' | head -1)"
 		DL_URL="$(echo $DRIVER_AVAIL | awk '{print $3}' | head -1)"
 		MD5_SUM="$(echo $DRIVER_AVAIL | awk '{print $4}' | head -1)"
-    DRIVER_AVAIL="$(echo $DRIVER_AVAIL | awk '{print $1}' | head -1)"
+		DRIVER_AVAIL="$(echo $DRIVER_AVAIL | awk '{print $1}' | head -1)"
 		FALLBACK="true"
 	fi
 fi
@@ -226,9 +226,9 @@ if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
   echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
   echo "----------This could take some time, please don't close this window!------------"
   if [ "${FALLBACK}" == "true" ]; then
-	download_fb
+    download_fb
   else
-	download
+    download
   fi
 else
   echo
