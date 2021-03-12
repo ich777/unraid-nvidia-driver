@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.03.10">
+  <!ENTITY version   "2021.03.12">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "8313a34d7cddcabe7027026eeb7a6338">
+  <!ENTITY md5       "11a2fc33edecf7eac912b89c7dc283a3">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -14,6 +14,10 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.03.12
+- Fixed Permissions
+- Added wait for network including timeout
 
 ###2021.03.10
 - Fixed error when booting into GUI mode that the screen only shows blinking cursor
@@ -84,15 +88,21 @@ driver_version=latest
 local_version=none' > "&plugin;/settings.cfg"
 fi
 
+#Wait for Network and timeout after 30 seconds
+HOST="www.google.com"
+for i in {1..10}; do
+  ping -c1 $HOST &amp;> /dev/null &amp;&amp; break;
+done
+
 #Set variables
 KERNEL_V="$(uname -r)"
-DRIVER_AVAIL="$(wget -qO- -T10 https://api.github.com/repos/ich777/unraid-plugins-repo/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
+DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-plugins-repo/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
 NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 
 #Fallback until how updates are handled is sorted
 if [ -z "$DRIVER_AVAIL" ]; then
 	echo "---Using Fallback URL---"
-	DRIVER_AVAIL="$(wget -qO- -T10 https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
+	DRIVER_AVAIL="$(wget -qO- https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
 	if [ ! -z "$DRIVER_AVAIL" ]; then
 		DL_DRV="$(echo $DRIVER_AVAIL | awk '{print $2}' | head -1)"
 		DL_URL="$(echo $DRIVER_AVAIL | awk '{print $3}' | head -1)"
