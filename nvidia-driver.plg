@@ -16,7 +16,7 @@
 <CHANGES>
 
 ###2021.03.16
-- Added option to disable create xorg.conf
+- Added option to disable creation of xorg.conf file
 
 ###2021.03.12
 - Fixed Permissions
