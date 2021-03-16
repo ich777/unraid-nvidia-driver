@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.03.12">
+  <!ENTITY version   "2021.03.16">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.03.16
+- Added option to disable create xorg.conf
 
 ###2021.03.12
 - Fixed Permissions
@@ -85,7 +88,8 @@ This Plugin will install the Nvidia drivers to utilize your Nvidia graphics card
 if [ ! -f "&plugin;/settings.cfg" ]; then
   echo 'first_installation=true
 driver_version=latest
-local_version=none' > "&plugin;/settings.cfg"
+local_version=none
+disable_xconfig=false' > "&plugin;/settings.cfg"
 fi
 
 #Wait for Network and timeout after 30 seconds
@@ -254,7 +258,9 @@ install() {
 /sbin/installpkg "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz"
 depmod >> /dev/null
 modprobe nvidia  >> /dev/null
-nvidia-xconfig --output-xconfig=/etc/X11/xorg.conf --silent 2>/dev/null
+if [ "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "disable_xconfig" | cut -d '=' -f2)" != "true" ]; then
+	nvidia-xconfig --output-xconfig=/etc/X11/xorg.conf --silent 2>/dev/null
+fi
 }
 
 #Check if Nvidia Driver Package is already downloaded
