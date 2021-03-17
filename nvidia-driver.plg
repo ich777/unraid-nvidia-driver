@@ -261,7 +261,7 @@ install() {
 /sbin/installpkg "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz"
 depmod >> /dev/null
 modprobe nvidia  >> /dev/null
-if [ "$(which Xorg 2>/dev/null)" ] && [ "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "disable_xconfig" | cut -d '=' -f2)" != "true" ]; then
+if [ "$(which Xorg 2>/dev/null)" ] &amp;&amp; [ "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "disable_xconfig" | cut -d '=' -f2)" != "true" ]; then
 	nvidia-xconfig --output-xconfig=/etc/X11/xorg.conf --silent 2>/dev/null
 fi
 }
