@@ -85,7 +85,7 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version
 **Nvidia Driver**
 
 This plugin will install the Nvidia drivers to utilize your Nvidia graphics card in your Docker container(s).
-This plugin satisfies installation prerequisites of the GPU Statistics plugin from Community Apps. With both plugins installed you can display Intel GPU utilization on the unRAID Dashboard.
+This plugin satisfies installation prerequisites of the GPU Statistics plugin from Community Apps. With both plugins installed you can display Nvidia GPU utilization on the unRAID Dashboard.
 </INLINE>
 </FILE>
 
