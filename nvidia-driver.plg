@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.03.17">
+  <!ENTITY version   "2021.03.19">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "11a2fc33edecf7eac912b89c7dc283a3">
+  <!ENTITY md5       "ba2f493c8c376a3c32519d78444a11a9">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -15,11 +15,15 @@
 
 <CHANGES>
 
+###2021.03.19
+- Fixed restart message shown if the version is changed from the latest to the latest driver version number and vice versa - reported by @binhex
+- Driver numbers file is updated now once every 5 minutes if the Plugin page is accessed several times within a short period of time
+
 ###2021.03.17
 - Added detection if unRAID is booted into GUI-Mode
 
 ###2021.03.16
-- Added option to disable creation of xorg.conf file
+- Added option to disable creation of xorg.conf file - requested by @TechGeek01
 
 ###2021.03.12
 - Fixed Permissions
@@ -29,7 +33,7 @@
 - Fixed error when booting into GUI mode that the screen only shows blinking cursor
 
 ###2021.03.09
-- Fixed Radio Buttons not showing current selected driver version
+- Fixed Radio Buttons not showing current selected driver version - reported by @binhex
 - Added Fallback URL until update handling is sorted
 
 ###2021.03.07
