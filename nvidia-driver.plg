@@ -17,6 +17,7 @@
 
 ###2021.03.22
 - Use IP address instead of hostname for online check
+- Fixed Plugin Error with fallback URL if no internet connection is available on boot
 
 ###2021.03.19
 - Fixed restart message shown if the version is changed from the latest to the latest driver version number and vice versa - reported by binhex
