@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.03.19">
+  <!ENTITY version   "2021.03.22">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.03.22
+- Use IP address instead of hostname for online check
 
 ###2021.03.19
 - Fixed restart message shown if the version is changed from the latest to the latest driver version number and vice versa - reported by binhex
@@ -101,7 +104,7 @@ disable_xconfig=false' > "&plugin;/settings.cfg"
 fi
 
 #Wait for Network and timeout after 30 seconds
-HOST="www.google.com"
+HOST="8.8.8.8"
 for i in {1..10}; do
   ping -c1 $HOST &amp;> /dev/null &amp;&amp; break;
 done
