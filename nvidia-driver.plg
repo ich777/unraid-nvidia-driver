@@ -124,7 +124,7 @@ if [ -z "$DRIVER_AVAIL" ]; then
 		DL_URL="$(echo $DRIVER_AVAIL | awk '{print $3}' | head -1)"
 		MD5_SUM="$(echo $DRIVER_AVAIL | awk '{print $4}' | head -1)"
 		DRIVER_AVAIL="$(echo $DRIVER_AVAIL | awk '{print $1}' | head -1)"
-    if [ "$(ping -c1 $HOST &amp;> /dev/null; echo $? )" == "0" ]; then
+    if [ "$(ping -c1 s3.amazonaws.com &amp;> /dev/null; echo $? )" == "0" ]; then
       FALLBACK="true"
     else
       echo
