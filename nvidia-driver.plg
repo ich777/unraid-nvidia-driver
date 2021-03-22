@@ -116,7 +116,8 @@ NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 
 #Fallback until how updates are handled is sorted
 if [ -z "$DRIVER_AVAIL" ]; then
-	echo "---Using Fallback URL---"
+  echo
+	echo "-------Main download URL not reachable, using Fallback URL-------"
 	DRIVER_AVAIL="$(wget -qO- https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
 	if [ ! -z "$DRIVER_AVAIL" ]; then
 		DL_DRV="$(echo $DRIVER_AVAIL | awk '{print $2}' | head -1)"
@@ -125,6 +126,11 @@ if [ -z "$DRIVER_AVAIL" ]; then
 		DRIVER_AVAIL="$(echo $DRIVER_AVAIL | awk '{print $1}' | head -1)"
     if [ "$(ping -c1 $HOST &amp;> /dev/null; echo $? )" == "0" ]; then
       FALLBACK="true"
+    else
+      echo
+      echo "----------------Fallback URL also not reachable!-----------------"
+      echo "---Are you sure that you have a active internet connection and---"
+      echo "--------no container like PiHole running on your server?---------"
     fi
 	fi
 fi
