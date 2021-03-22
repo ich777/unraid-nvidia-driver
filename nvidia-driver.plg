@@ -125,14 +125,14 @@ if [ -z "$DRIVER_AVAIL" ]; then
 		DL_URL="$(echo $DRIVER_AVAIL | awk '{print $3}' | head -1)"
 		MD5_SUM="$(echo $DRIVER_AVAIL | awk '{print $4}' | head -1)"
 		DRIVER_AVAIL="$(echo $DRIVER_AVAIL | awk '{print $1}' | head -1)"
-    if [ "$(ping -c1 s3.amazonaws.com &amp;> /dev/null; echo $? )" == "0" ]; then
-      FALLBACK="true"
-    else
-      echo
-      echo "----------------Fallback URL also not reachable!-----------------"
-      echo "---Are you sure that you have a active internet connection and---"
-      echo "--------no container like PiHole running on your server?---------"
-    fi
+		if [ "$(ping -c1 s3.amazonaws.com &amp;> /dev/null; echo $? )" == "0" ]; then
+			FALLBACK="true"
+		else
+			echo
+			echo "----------------Fallback URL also not reachable!-----------------"
+			echo "---Are you sure that you have a active internet connection and---"
+			echo "--------no container like PiHole running on your server?---------"
+		fi
 	fi
 fi
 
