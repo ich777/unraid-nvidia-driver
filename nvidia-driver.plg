@@ -18,7 +18,7 @@
 ###2021.04.16
 - Fixed bug where local_version wasn't updated in settings file when driver was downloaded through WebUI
 - Fixed plugin showing no version numbers when drivers where not found on Github
-- Show only last 8 Drivers on plugin page
+- Show only last 8 latest drivers on plugin page
 
 ###2021.03.22
 - Use IP address instead of hostname for online check
