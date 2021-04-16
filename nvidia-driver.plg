@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.03.22">
+  <!ENTITY version   "2021.04.16">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "ba2f493c8c376a3c32519d78444a11a9">
+  <!ENTITY md5       "6f92f30b0d9c1b84df47ed46936c30c3">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -14,6 +14,11 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.04.16
+- Fixed bug where local_version wasn't updated in settings file when driver was downloaded through WebUI
+- Fixed plugin showing no version numbers when drivers where not found on Github
+- Show only last 8 Drivers on plugin page
 
 ###2021.03.22
 - Use IP address instead of hostname for online check
@@ -280,6 +285,9 @@ depmod >> /dev/null
 modprobe nvidia  >> /dev/null
 if [ "$(which Xorg 2>/dev/null)" ] &amp;&amp; [ "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "disable_xconfig" | cut -d '=' -f2)" != "true" ]; then
 	nvidia-xconfig --output-xconfig=/etc/X11/xorg.conf --silent 2>/dev/null
+fi
+if [ "$(cat &plugin;/settings.cfg | grep "local_version=" | cut -d '=' -f2)" != "${NV_DRV_V}" ]; then
+  sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
 fi
 }
 
