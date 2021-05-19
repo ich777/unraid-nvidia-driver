@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.04.29">
+  <!ENTITY version   "2021.05.19">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "dfd899f1a12b518c825af9b24e83f2bf">
+  <!ENTITY md5       "fb713fe00312c0cc03d9a799a8e3d2a4">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.05.19
+- Added driver update notification
 
 ###2021.04.29
 - Added options to select latest version from 'Production Branch' and 'New Feature Branch'
@@ -109,7 +112,13 @@ if [ ! -f "&plugin;/settings.cfg" ]; then
   echo 'first_installation=true
 driver_version=latest
 local_version=none
-disable_xconfig=false' > "&plugin;/settings.cfg"
+disable_xconfig=false
+update_check=true' > "&plugin;/settings.cfg"
+fi
+
+#Add update check entry if not exists
+if [ ! "$(grep "update_check=" &plugin;/settings.cfg)" ]; then
+  echo "update_check=true" &gt;&gt; &plugin;/settings.cfg
 fi
 
 #Wait for Network and timeout after 30 seconds
@@ -357,6 +366,12 @@ fi
 if [ "$(cat &plugin;/settings.cfg | grep "local_version=" | cut -d '=' -f2)" != "${NV_DRV_V}" ]; then
   sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
 fi
+if [[ "$(cat &plugin;/settings.cfg | grep "driver_version=" | cut -d '=' -f2)" != "latest" &amp;&amp; "$(cat &plugin;/settings.cfg | grep "driver_version=" | cut -d '=' -f2)" != "latest_prb" &amp;&amp; "$(cat &plugin;/settings.cfg | grep "driver_version=" | cut -d '=' -f2)" != "latest_nfb" ]]; then
+  sed -i '/update_check=/c\update_check=false' "&plugin;/settings.cfg"
+fi
+if [ "$(cat &plugin;/settings.cfg | grep "update_check=" | cut -d '=' -f2)" == "true" ]; then
+  (crontab -l ; echo ""$((0 + $RANDOM % 59))" "$(shuf -i 8-9 -n 1)" * * * /usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1") | crontab -
+fi
 }
 
 #Check if Nvidia Driver Package is already downloaded
@@ -397,6 +412,7 @@ echo "---Uninstalling Nvidia driver package---"
 echo "----------------------------------------"
 # Remove plugin related files
 removepkg &name;-&version;
+crontab -l | grep -v '/usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1'  | crontab -
 rm -rf /usr/local/emhttp/plugins/&name;
 rm -rf &plugin;
 echo
