@@ -378,6 +378,9 @@ fi
 if [ -f /usr/bin/nvidia-smi ]; then
   echo
   echo "-----------------------Nvidia Drivers already installed!-------------------------"
+  if [ "$(cat &plugin;/settings.cfg | grep "update_check=" | cut -d '=' -f2)" == "true" ]; then
+    (crontab -l ; echo ""$((0 + $RANDOM % 59))" "$(shuf -i 8-9 -n 1)" * * * /usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1") | crontab -
+  fi
   exit 0
 else
   check
