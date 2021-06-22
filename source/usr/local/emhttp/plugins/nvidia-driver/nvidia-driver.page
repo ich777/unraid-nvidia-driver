@@ -3,14 +3,28 @@ Title="Nvidia Driver"
 Icon="nvidia-driver.png"
 ---
 <?php
+//Get selected driver version
+$selected_v = shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_selected_version");
+
 //Update driver versions and create file '/tmp/nvidia_driver'
 shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update');
 
+//Get latest version
 $latest_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_latest_version');
+
+//Get branch versions
+$latest_prb_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_prb');
+$latest_nfb_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_nfb');
+
+//Get current installed driver version
+$installed_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_installed_version');
 
 //Read driver versions from '/tmp/nvidia_driver'
 error_reporting(E_ALL);
 ini_set('display_errors',1);
+
+//Get value from update check
+$update_check = shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_check");
 
 $filename = "/tmp/nvidia_driver";
 $eachlines = file($filename, FILE_IGNORE_NEW_LINES);
@@ -35,8 +49,7 @@ $(function(){
 });
 </script>
 
-<h1 style="text-align: center;"><a href="https://forums.unraid.net/" target="_blank" rel="noopener"><span style="color: #800000;">Nvidia Driver Package</span></a></h1>
-<p style="text-align: center;">This plugin displays informations about your installed Nvidia GPU(s) and you can change you preferred driver version for this Unraid version.</p>
+<h1 style="text-align: center;"><a href="https://forums.unraid.net/" target="_blank" rel="noopener"><span style="color: green;">Nvidia Driver Package</span></a></h1>
 
 <div style="width: 50%; float:left">
     <div id="title">
@@ -63,22 +76,47 @@ $(function(){
     </div>
     <table class="settings">
         <tr>
-            <td><b><font size="+1">Select preferred driver version:</font></b></td>
+            <b><font size="+1">Select preferred driver version:</font></b>
         </tr>
         <tr>            
             <form id="s" method="post" >
-                <td>Versions:</td>
+            	<table class="settings">
+            	<tr>
+                <td><b>Latest Versions:</b></td>
                 <td>
-                    <p><input type="radio" name="drv_version" value="latest"/> latest = <?php echo "v$latest_v"; ?> </p>
-                    <?php foreach($eachlines as $lines){
+                    <p><input type="radio" name="drv_version" value="latest" <?php echo ( $selected_v == "latest") ? 'checked="checked"' : ''; ?><font><b>latest</font>:</b> <?php echo "v$latest_v"; ?> </p>
+                    <? if (isset($latest_prb_v ) === true && trim($latest_prb_v ) !== ''): ?>
+                    <p><input type="radio" name="drv_version" value="latest_prb" <?php echo ( $selected_v == "latest_prb") ? 'checked="checked"' : ''; ?><b><font color = "green"><b>Production Branch</font>:</b>  <?php echo "v$latest_prb_v"; ?> </p>
+                    <? else: ?>
+                    <p><b><font color = "green">Production Branch</font>:</b> <i>Can't get version, please try again later!</i></p>
+                    <? endif; ?>
+                    <? if (isset($latest_nfb_v ) === true && trim($latest_nfb_v ) !== ''): ?>
+                    <p><input type="radio" name="drv_version" value="latest_nfb" <?php echo ( $selected_v == "latest_nfb") ? 'checked="checked"' : ''; ?><b><font color = "tomato"><b>New Feature Branch</font>:</b> <?php echo "v$latest_nfb_v"; ?></p>
+                    <? else: ?>
+                    <p><b><font color = "tomato">New Feature Branch</font>:</b> <i>Can't get version, please try again later!</i></p>
+                    <? endif; ?>
+                </td>
+                </tr>
+                </table>
+                <table class="settings">
+                <tr>
+                <td><b>Available Versions:</b></td><td>
+                    <?php
+                    krsort($eachlines);
+                    foreach($eachlines as $lines){
                     $arr = explode(" ", $lines);
-                    $arr = array_splice($arr, 1, 1);
                     $lines2 = implode(" ", $arr);
-                    echo "<p><input type=\"radio\" name=\"drv_version\" value=\"$lines2\"/> v$lines2</p>";
-                    }
+					?>
+                    <p>
+						<input type="radio" name="drv_version" value="<?php echo $lines2;?>" <?php echo ( $selected_v == $lines2) ? 'checked="checked"' : '' ?>/> 
+						v<?php echo $lines2;?>
+					</p>
+                    <?php
+					}
                     ?>
                 </td>
             </tr>
+            
             <tr>
                 <td>
                 </td>
@@ -87,25 +125,20 @@ $(function(){
                 </td>
             </tr>
             </form>
-    </table>
-<p style="text-align: left; font-weight: bold;">ATTENTION: If you set the version to 'latest' the plugin will check on every restart if a newer driver is available and download it.<br>Please keep in mind that the boot process can take longer than normal since the plugin downloads and installs the newer driver on boot.</p>
+            </table>
+	<table class="settings">
+		<p style="text-align: left; font-weight: bold;">ATTENTION: If you set the version to 'latest', 'Production Branch' or 'New Feature Branch' the plugin will check on every restart if a newer driver is available and download it.<br>Please keep in mind that the boot process maybe take longer than usual since the plugin downloads and installs the newer driver on boot.</p>
+		<i>Please keep in mind if you update Unraid to a newer version and there is no internet connection on boot available the download of the driver will fail and you have to delete the Plugin from the Plugins Error tab on the Plugin page and then reinstall the Plugin from the CA App.</i><br>
+		<br>
+		<p><b><font size+1> Latest versions:</font></b></p>
+		<ul>
+		  <p>
+		  <li><b>latest</b> - will always download the latest driver version available regardless of the branch</li><br>
+		  <li><b>Production Branch</b>  - This is the long lifecycle (i.e., multiple releases in a branch over a single year period) driver branch providing ISV Certification, optimal stability and performance, and regular security updates for NVIDIA RTX/Quadro professional customers. This driver was previously named, Optimal Driver for Enterprise (ODE), and is most commonly deployed in production systems at enterprises.</li><br>
+		  <li><b>New Feature Branch</b>  - This is a short lived branch driver (i.e., 1-2 releases per branch only) where new NVIDIA RTX/Quadro features are introduced and made available between Production Branch releases. New Feature Branch drivers, previously named, Quadro New Feature (QNF), typically provide support for new operating systems, third party hardware, and game engines.</li>
+		  </p></ul>
+	</table>
 </div>
-
-<?php
-//Post driver version
-if(isset($_POST['updatedrvv'])) {
-$drv_version = $_POST["drv_version"];
-if ($drv_version == "latest"){
-shell_exec("logger ---Nvidia driver v$latest_v will be downloaded and installed at next reboot---");
-shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
-shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$latest_v\" -i \"alert\"");
-} else {
-shell_exec("logger ---Nvidia driver v$drv_version will be downloaded and installed at next reboot---");
-shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
-shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$drv_version\" -i \"alert\"");
-}
-}
-?>
 
 <div style="width: 50%; float:left">
     <div id="title">
@@ -128,6 +161,85 @@ shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver 
             <td style="color: #99cc00;"><b><?=`uname -v | cut -d ' ' -f3-`?></b></td>
         </tr>
     </table>
+    <? if (isset($selected_v ) === true && trim($selected_v ) === 'latest' || trim($selected_v ) === 'latest_prb' || trim($selected_v ) === 'latest_nfb'): ?>
+    <div id="title">
+        <span class="left"></span>
+    </div>
+    	<table class="settings">
+		<tr><td>
+		<b><font size="+1">Driver Update Notification</font></b>
+		</td></tr>
+		<tr><td>
+		<form id="s" method="post" >
+		<select name="updata_check_selected" required>
+                    <option <?php echo ( $update_check == "true") ? 'selected="selected"' : '' ?> value="true"> Enabled</option>
+                    <option <?php echo ( $update_check == "false") ? 'selected="selected"' : '' ?> value="false"> Disabled</option>
+                </select>
+                <input type="submit" name="changeUPDcheck" value="Change">
+                </form>
+                </td>
+                <tr><td><p>The Driver Update Notification, checks once a day (between 8 am and 10 am) whether a new version of the selected branch is available and, if necessary, downloads the new driver and sends a notification.</p>
+			<p><b>The server has to be restarted in order to install the new driver.</b></p>
+		</tr></td>
+	</table>
+     <? endif; ?>
+</div>
+
+<div style="width: 50%; float:left">
+	<div id="title">
+        <span class="left"></span>
+    </div>
+	<table class="settings">
+		<td>
+		<b>This button allows you to download the Nvidia Driver right now instead of at boot.</b><br><i>You can also use this button to verify the Checksum of the downloaded driver.</i>
+		</td>
+	</table>
+	<table class="settings">
+	<td>
+		<td><?php
+		echo "<a href=\"#\" title='"._("Download Driver")."' onclick=\"openBox('/usr/local/emhttp/plugins/nvidia-driver/include/download.sh','Downloading Driver',500,800,false);return false\"><button type='button'>Download</button></a></a>";
+		?></td>
+	</td>
+    </table>
 </div>
 
 
+<?php
+//Post driver version
+if(isset($_POST['updatedrvv'])) {
+$drv_version = $_POST["drv_version"];
+if ($drv_version == "latest"){
+shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
+if($latest_v != $installed_v){
+shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$latest_v\" -i \"alert\"");
+}
+echo '<script>parent.window.location.reload();</script>';
+} elseif ($drv_version == "latest_prb"){
+shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
+if($installed_v != $latest_prb_v){
+shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$latest_prb_v\" -i \"alert\"");
+}
+echo '<script>parent.window.location.reload();</script>';
+} elseif ($drv_version == "latest_nfb"){
+shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
+if("$installed_v" != $latest_nfb_v){
+shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$latest_nfb_v\" -i \"alert\"");
+}
+echo '<script>parent.window.location.reload();</script>';
+}else {
+shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version $drv_version");
+if($drv_version != $installed_v){
+shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver v$drv_version\" -i \"alert\"");
+}
+echo '<script>parent.window.location.reload();</script>';
+}
+}
+?>
+
+<?php
+if(isset($_POST['changeUPDcheck'])) {
+$updata_check_selected = $_POST["updata_check_selected"];
+shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh change_update_check $updata_check_selected");
+echo '<script>parent.window.location.reload();</script>';
+}
+?>
