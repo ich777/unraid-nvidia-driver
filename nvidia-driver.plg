@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.05.19">
+  <!ENTITY version   "2021.06.23">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "fb713fe00312c0cc03d9a799a8e3d2a4">
+  <!ENTITY md5       "d2d508a41b75ea0449938a36999bdd35">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.06.23
+- Changed package download repo
 
 ###2021.05.19
 - Added driver update notification
@@ -129,7 +132,7 @@ done
 
 #Set variables
 KERNEL_V="$(uname -r)"
-DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-plugins-repo/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
+DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
 NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 
 #Fallback until how updates are handled is sorted
@@ -282,8 +285,8 @@ fi
 
 #Download Nvidia Driver Package
 download() {
-if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "https://github.com/ich777/unraid-plugins-repo/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz" ; then
-  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(wget -qO- "https://github.com/ich777/unraid-plugins-repo/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz.md5" | cut -d ' ' -f1)" ]; then
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz" ; then
+  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(wget -qO- "https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz.md5" | cut -d ' ' -f1)" ]; then
     if [ -d &plugin; ]; then
       rm -rf &plugin;
     fi
