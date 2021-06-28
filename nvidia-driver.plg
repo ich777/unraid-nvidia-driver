@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.06.23">
+  <!ENTITY version   "2021.06.28">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -14,6 +14,10 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.06.23
+- Fixed error message on boot after upgrade to newer unRAID version
+- Corrected a few typos
 
 ###2021.06.23
 - Changed package download repo
@@ -172,15 +176,15 @@ if [ "${NV_DRV_V}" == "latest" ]; then
     else
       NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
       #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     fi
   else
     DL_DRV="$(echo "$DRIVER_AVAIL" | tail -1)"
     NV_DRV_V="${DL_DRV}"
     #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
   fi
 elif [ "${NV_DRV_V}" == "latest_prb" ]; then
   LAT_PRB_AVAIL="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep 'PRB' | cut -d '=' -f2 | sort -V)"
@@ -196,22 +200,22 @@ elif [ "${NV_DRV_V}" == "latest_prb" ]; then
     else
       NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
       #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     fi
   elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") | sort -V | tail -1)" ]; then
     echo
     echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
     echo "----Can't get Production Branch version and found no installed local driver-----"
     echo "-----Please wait for an hour and try it again, if it then also fails please-----"
-    echo "------go to the Support Thread on the Unraid forums and make a post there!------"
+    echo "------go to the Support Thread on the unRAID forums and make a post there!------"
     exit 1
   else
     DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") | sort -V | tail -1)"
     NV_DRV_V="${DL_DRV}"
     #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
   fi
 elif [ "${NV_DRV_V}" == "latest_nfb" ]; then
   LAT_NFB_AVAIL="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep 'NFB' | cut -d '=' -f2 | sort -V)"
@@ -227,22 +231,22 @@ elif [ "${NV_DRV_V}" == "latest_nfb" ]; then
     else
       NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
       #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     fi
   elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") | sort -V | tail -1)" ]; then
     echo
     echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
     echo "----Can't get New Feature Branch version and found no installed local driver----"
     echo "-----Please wait for an hour and try it again, if it then also fails please-----"
-    echo "------go to the Support Thread on the Unraid forums and make a post there!------"
+    echo "------go to the Support Thread on the unRAID forums and make a post there!------"
     exit 1
   else
     DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") | sort -V | tail -1)"
     NV_DRV_V="${DL_DRV}"
     #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
   fi
 else
   if [ -z "$DRIVER_AVAIL" ]; then
@@ -257,14 +261,14 @@ else
     else
       NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
       #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     fi
   else
     DL_DRV="$(echo "$DRIVER_AVAIL" | grep "$NV_DRV_V")"
     #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     if [ -z "${DL_DRV}" ]; then
       NV_DRV_OLD=${NV_DRV_V}
       DL_DRV="$(echo "$DRIVER_AVAIL" | tail -1)"
@@ -273,8 +277,8 @@ else
       echo "---Can't find Nvidia Driver v${NV_DRV_OLD} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v${NV_DRV_V}---"
       sed -i '/driver_version=/c\driver_version=latest' "&plugin;/settings.cfg"
       #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz | grep -v "$NV_DRV_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
+      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     fi
   fi
 fi
