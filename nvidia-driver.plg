@@ -427,7 +427,7 @@ else
   INST_V="$(grep -E "Plugin-Update-Helper version:" /usr/bin/plugin_update_helper | awk '{print $4}')"
   COMPARE="$(sort -V &lt;(echo -e "${PLUGIN_V}\n$INST_V") | tail -1)"
   if [ "$INST_V" != "$COMPARE" ]; then
-    kill $(ps aux | grep -E "inotifywait -q /boot/changes.txt -e move_self,delete_self" | grep -v "grep inotifywait" | awk '{print $2}') 2>/dev/null
+    kill $(ps aux | grep -E "inotifywait -q /boot/changes.txt -e move_self,delete_self" | grep -v "grep -E inotifywait" | awk '{print $2}') 2>/dev/null
     sleep 1
     cp &plugin;/plugin_update_helper /usr/bin/plugin_update_helper
     chmod +x /usr/bin/plugin_update_helper
@@ -435,7 +435,7 @@ else
 fi
 
 #Start Plugin Update Helper
-if [ -z "$(ps aux | grep -E "inotifywait -q /boot/changes.txt -e move_self,delete_self" | grep -v "grep inotifywait" | awk '{print $2}')" ]; then
+if [ -z "$(ps aux | grep -E "inotifywait -q /boot/changes.txt -e move_self,delete_self" | grep -v "grep -E inotifywait" | awk '{print $2}')" ]; then
   echo "/usr/bin/plugin_update_helper" | at now
 fi
 
