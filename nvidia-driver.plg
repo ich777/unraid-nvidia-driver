@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.07.29">
+  <!ENTITY version   "2021.07.30">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.07.30
+- Bugfix, thanks to cybrnook
 
 ###2021.07.29
 - Added Plugin Update Helper when up-/downgrading unRAID version
@@ -397,10 +400,6 @@ if [ -f /usr/bin/nvidia-smi ]; then
 else
   check
 fi
-
-#Check if DVB-Driver-Package is already downloaded
-check_package
-install_package >/dev/null
 
 #Check if Plugin Update Helper is downloaded and up-to-date
 if [ ! -f &plugin;/plugin_update_helper ]; then
