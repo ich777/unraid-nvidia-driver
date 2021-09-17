@@ -6,7 +6,7 @@
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "56f2f4d95038336bcaee999850c58982">
+  <!ENTITY md5       "17090d9bd16d3c18e533b429423d0680">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2021.09.17
+- Fixed plugin to escape variables properly
 
 ###2021.09.15
 - Added message to New Feature and Production Branch if no driver package is found for current unRAID version
