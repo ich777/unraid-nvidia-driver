@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2021.09.17">
+  <!ENTITY version   "2022.01.20">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2022.01.20
+- Changed default driver download from Latest" to Latest Production Branch
 
 ###2021.09.17
 - Fixed plugin to escape variables properly
@@ -129,7 +132,7 @@ This plugin satisfies installation prerequisites of the GPU Statistics plugin fr
 #Create settings file if not found
 if [ ! -f "&plugin;/settings.cfg" ]; then
   echo 'first_installation=true
-driver_version=latest
+driver_version=latest_prb
 local_version=none
 disable_xconfig=false
 update_check=true' > "&plugin;/settings.cfg"
