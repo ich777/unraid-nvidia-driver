@@ -16,7 +16,7 @@
 <CHANGES>
 
 ###2022.01.20
-- Changed default driver download from Latest" to Latest Production Branch
+- Changed default driver download from Latest to Latest Production Branch
 
 ###2021.09.17
 - Fixed plugin to escape variables properly
