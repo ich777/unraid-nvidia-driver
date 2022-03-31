@@ -1,6 +1,8 @@
 # Download the Nvidia driver package
 cd ${DATA_DIR}
-wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run http://download.nvidia.com/XFree86/Linux-x86_64/${NV_DRV_V}/NVIDIA-Linux-x86_64-${NV_DRV_V}.run
+if [ ! -f ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run ]; then
+  wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run http://us.download.nvidia.com/XFree86/Linux-x86_64/${NV_DRV_V}/NVIDIA-Linux-x86_64-${NV_DRV_V}.run
+fi
 
 # Make the Nvidia driver executable and install it in a temporary directory
 chmod +x ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run
@@ -27,6 +29,9 @@ ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run --kernel-name=$UNAME \
 --silent
 
 # Copy files for OpenCL and Vulkan over to temporary installation directory
+if [ -d /lib/firmware/nvidia ]; then
+  cp -R /lib/firmware/nvidia /NVIDIA/lib/firmware/
+fi
 cp /usr/bin/nvidia-modprobe /NVIDIA/usr/bin/
 cp -R /etc/OpenCL /NVIDIA/etc/
 cp -R /etc/vulkan /NVIDIA/etc/
@@ -36,16 +41,21 @@ cp -R /etc/vulkan /NVIDIA/etc/
 # Source nvidia-container-runtime: https://github.com/ich777/nvidia-container-runtime
 # Source nvidia-container-toolkit: https://github.com/ich777/nvidia-container-toolkit
 cd ${DATA_DIR}
-wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/libnvidia-container-v${LIBNVIDIA_CONTAINER_V}.tar.gz https://github.com/ich777/libnvidia-container/releases/download/${LIBNVIDIA_CONTAINER_V}/libnvidia-container-v${LIBNVIDIA_CONTAINER_V}.tar.gz
+if [ ! -f ${DATA_DIR}/libnvidia-container-v${LIBNVIDIA_CONTAINER_V}.tar.gz ]; then
+  wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/libnvidia-container-v${LIBNVIDIA_CONTAINER_V}.tar.gz https://github.com/ich777/libnvidia-container/releases/download/${LIBNVIDIA_CONTAINER_V}/libnvidia-container-v${LIBNVIDIA_CONTAINER_V}.tar.gz
+fi
 tar -C /NVIDIA -xf ${DATA_DIR}/libnvidia-container-v${LIBNVIDIA_CONTAINER_V}.tar.gz
 
-# DEPRECATED now included in libnvidia-container
+#DEPRECATED
 #cd ${DATA_DIR}
 #wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/nvidia-container-runtime-v${NVIDIA_CONTAINER_RUNTIME_V}.tar.gz https://github.com/ich777/nvidia-container-runtime/releases/download/${NVIDIA_CONTAINER_RUNTIME_V}/nvidia-container-runtime-v${NVIDIA_CONTAINER_RUNTIME_V}.tar.gz
 #tar -C /NVIDIA -xf ${DATA_DIR}/nvidia-container-runtime-v${NVIDIA_CONTAINER_RUNTIME_V}.tar.gz
+#Removed from Slackware description: $PLUGIN_NAME: nvidia-container-runtime v${NVIDIA_CONTAINER_RUNTIME_V}
 
 cd ${DATA_DIR}
-wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/nvidia-container-toolkit-v${CONTAINER_TOOLKIT_V}.tar.gz https://github.com/ich777/nvidia-container-toolkit/releases/download/${CONTAINER_TOOLKIT_V}/nvidia-container-toolkit-v${CONTAINER_TOOLKIT_V}.tar.gz
+if [ ! -f ${DATA_DIR}/nvidia-container-toolkit-v${CONTAINER_TOOLKIT_V}.tar.gz ]; then
+  wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/nvidia-container-toolkit-v${CONTAINER_TOOLKIT_V}.tar.gz https://github.com/ich777/nvidia-container-toolkit/releases/download/${CONTAINER_TOOLKIT_V}/nvidia-container-toolkit-v${CONTAINER_TOOLKIT_V}.tar.gz
+fi
 tar -C /NVIDIA -xf ${DATA_DIR}/nvidia-container-toolkit-v${CONTAINER_TOOLKIT_V}.tar.gz
 
 # Create Slackware package
