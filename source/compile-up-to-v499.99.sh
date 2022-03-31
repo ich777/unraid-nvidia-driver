@@ -6,27 +6,27 @@ fi
 
 # Make the Nvidia driver executable and install it in a temporary directory
 chmod +x ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run
-mkdir -p /NVIDIA/usr/lib64/xorg/modules/{drivers,extensions} /NVIDIA/usr/bin /NVIDIA/etc /NVIDIA/lib/modules/${UNAME}/kernel/drivers/video
+mkdir -p /NVIDIA/usr/lib64/xorg/modules/{drivers,extensions} /NVIDIA/usr/bin /NVIDIA/etc /NVIDIA/lib/modules/${UNAME}/kernel/drivers/video /NVIDIA/lib/firmware
 ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run --kernel-name=$UNAME \
---no-precompiled-interface \
---disable-nouveau \
---x-prefix=/NVIDIA/usr \
---x-library-path=/NVIDIA/usr/lib64 \
---x-module-path=/NVIDIA/usr/lib64/xorg/modules \
---opengl-prefix=/NVIDIA/usr \
---installer-prefix=/NVIDIA/usr \
---utility-prefix=/NVIDIA/usr \
---documentation-prefix=/NVIDIA/usr \
---application-profile-path=/NVIDIA/usr/share/nvidia \
---proc-mount-point=/NVIDIA/proc \
---kernel-install-path=/NVIDIA/lib/modules/${UNAME}/kernel/drivers/video \
---compat32-libdir=/NVIDIA/usr \
---install-compat32-libs \
---no-x-check \
---no-nouveau-check \
---skip-depmod \
---j${CPU_COUNT} \
---silent
+  --no-precompiled-interface \
+  --disable-nouveau \
+  --x-prefix=/NVIDIA/usr \
+  --x-library-path=/NVIDIA/usr/lib64 \
+  --x-module-path=/NVIDIA/usr/lib64/xorg/modules \
+  --opengl-prefix=/NVIDIA/usr \
+  --installer-prefix=/NVIDIA/usr \
+  --utility-prefix=/NVIDIA/usr \
+  --documentation-prefix=/NVIDIA/usr \
+  --application-profile-path=/NVIDIA/usr/share/nvidia \
+  --proc-mount-point=/NVIDIA/proc \
+  --kernel-install-path=/NVIDIA/lib/modules/${UNAME}/kernel/drivers/video \
+  --compat32-libdir=/NVIDIA/usr \
+  --install-compat32-libs \
+  --no-x-check \
+  --no-nouveau-check \
+  --skip-depmod \
+  --j${CPU_COUNT} \
+  --silent
 
 # Copy files for OpenCL and Vulkan over to temporary installation directory
 if [ -d /lib/firmware/nvidia ]; then
