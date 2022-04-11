@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2022.01.20">
+  <!ENTITY version   "2022.04.11">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2022.04.11
+- Removed warning messages from console on boot
 
 ###2022.01.20
 - Changed default driver download from Latest to Latest Production Branch
@@ -218,7 +221,7 @@ elif [ "${NV_DRV_V}" == "latest_prb" ]; then
       rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
       rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     fi
-  elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") | sort -V | tail -1)" ]; then
+  elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)" ]; then
     echo
     echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
     echo "----Can't get Production Branch version and found no installed local driver-----"
@@ -226,7 +229,7 @@ elif [ "${NV_DRV_V}" == "latest_prb" ]; then
     echo "------go to the Support Thread on the unRAID forums and make a post there!------"
     exit 1
   else
-    DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") | sort -V | tail -1)"
+    DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)"
     NV_DRV_V="${DL_DRV}"
     #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
     rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
@@ -249,7 +252,7 @@ elif [ "${NV_DRV_V}" == "latest_nfb" ]; then
       rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
       rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
     fi
-  elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") | sort -V | tail -1)" ]; then
+  elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)" ]; then
     echo
     echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
     echo "----Can't get New Feature Branch version and found no installed local driver----"
@@ -257,7 +260,7 @@ elif [ "${NV_DRV_V}" == "latest_nfb" ]; then
     echo "------go to the Support Thread on the unRAID forums and make a post there!------"
     exit 1
   else
-    DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") | sort -V | tail -1)"
+    DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)"
     NV_DRV_V="${DL_DRV}"
     #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
     rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
@@ -447,7 +450,7 @@ fi
 
 #Start Plugin Update Helper
 if [ -z "$(ps aux | grep -E "inotifywait -q /boot/changes.txt -e move_self,delete_self" | grep -v "grep -E inotifywait" | awk '{print $2}')" ]; then
-  echo "/usr/bin/plugin_update_helper" | at now
+  echo "/usr/bin/plugin_update_helper" | at now &gt; /dev/null 2&gt;&amp;1
 fi
 
 #Install Nvidia Driver Package
