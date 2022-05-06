@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2022.04.29">
+  <!ENTITY version   "2022.05.06">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -14,6 +14,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2022.05.06
+- When notifications via Mail is setup don't send message about download progress anymore
 
 ###2022.04.29
 - Changed default driver download from Latest Production Branch back to Latest
@@ -453,7 +456,7 @@ fi
 
 #Start Plugin Update Helper
 if [ -z "$(ps aux | grep -E "inotifywait -q /boot/changes.txt -e move_self,delete_self" | grep -v "grep -E inotifywait" | awk '{print $2}')" ]; then
-  echo "/usr/bin/plugin_update_helper" | at now &gt; /dev/null 2&gt;&amp;1
+  echo "/usr/bin/plugin_update_helper" | at now -M &gt; /dev/null 2&gt;&amp;1
 fi
 
 #Install Nvidia Driver Package
