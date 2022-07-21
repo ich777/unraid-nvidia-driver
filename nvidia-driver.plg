@@ -9,6 +9,7 @@
   <!ENTITY md5       "17090d9bd16d3c18e533b429423d0680">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
+  <!ENTITY packages  "/boot/config/plugins/&name;/packages">
 ]>
 
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
@@ -138,6 +139,84 @@ This plugin satisfies installation prerequisites of the GPU Statistics plugin fr
 <FILE Run="/bin/bash">
 <INLINE>
 
+download() {
+#Download Nvidia Driver Package
+if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&packages;/${KERNEL_V%%-*}/${LAT_PACKAGE}" "${DL_URL}/${LAT_PACKAGE}" ; then
+  wget -q -nc --show-progress --progress=bar:force:noscroll -O "&packages;/${KERNEL_V%%-*}/${LAT_PACKAGE}.md5" "${DL_URL}/${LAT_PACKAGE}.md5"
+  if [ "$(md5sum &packages;/${KERNEL_V%%-*}/${LAT_PACKAGE} | awk '{print $1}')" != "$(cat &packages;/${KERNEL_V%%-*}/${LAT_PACKAGE}.md5 | awk '{print $1}')" ]; then
+    echo
+    echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
+    echo "--------------------------------CHECKSUM ERROR!---------------------------------"
+    rm -rf &plugin; &emhttp;
+    exit 1
+  fi
+  echo
+  echo "----Successfully downloaded Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2), please wait!----"
+else
+  echo
+  echo "--------------Can't download Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-----------------"
+  rm -rf &plugin; &emhttp;
+  exit 1
+fi
+}
+
+#Check if driver is already downloaded
+check() {
+if ! ls -1 &packages;/${KERNEL_V%%-*}/ | grep -q "${PACKAGE}" ; then
+  echo
+  echo "+=============================================================================="
+  echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
+  echo "|"
+  echo "| Don't close this window with the red 'X' in the top right corner until the 'DONE' button is displayed!"
+  echo "|"
+  echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
+  echo "+=============================================================================="
+  echo
+  echo "-----------------Downloading Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)------------------"
+  echo "----------This could take some time, please don't close this window!------------"
+  download
+else
+  echo
+  echo "--------------------Nvidia driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) found locally---------------------"
+fi
+}
+
+get_versions() {
+DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V)"
+BRANCHES="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep -v "UPDATED")"
+}
+
+#Install driver package
+install() {
+/sbin/installpkg "&packages;/${KERNEL_V%%-*}/${PACKAGE}*.txz"
+depmod 2>/dev/null
+modprobe nvidia 2>/dev/null
+}
+
+activate() {
+if [ "$(which Xorg 2>/dev/null)" ] &amp;&amp; [ "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "disable_xconfig" | cut -d '=' -f2)" != "true" ]; then
+  nvidia-xconfig --output-xconfig=/etc/X11/xorg.conf --silent 2>/dev/null
+fi
+if [[ "$SET_DRV_V" != "latest" &amp;&amp; "$SET_DRV_V" != "latest_prb" &amp;&amp; "$SET_DRV_V" != "latest_nfb" ]]; then
+  sed -i '/update_check=/c\update_check=false' "&plugin;/settings.cfg"
+fi
+if [ "$UPDATED_CHECK" == "true" ]; then
+  (crontab -l ; echo ""$((0 + $RANDOM % 59))" "$(shuf -i 8-9 -n 1)" * * * /usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1") | crontab -
+fi
+}
+
+#Set variables
+KERNEL_V="$(uname -r)"
+PACKAGE="nvidia"
+DL_URL="https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}"
+
+if [ ! -d "&packages;/${KERNEL_V%%-*}" ]; then
+  mkdir -p "&packages;/${KERNEL_V%%-*}"
+  CUR_V=""
+else
+  CUR_V="$(ls -p &packages;/${KERNEL_V%%-*} 2&gt;/dev/null | grep -E -v '\.md5' | sort -V | tail -1)"
+fi
+
 #Create settings file if not found
 if [ ! -f "&plugin;/settings.cfg" ]; then
   echo 'first_installation=true
@@ -152,80 +231,42 @@ if [ ! "$(grep "update_check=" &plugin;/settings.cfg)" ]; then
   echo "update_check=true" &gt;&gt; &plugin;/settings.cfg
 fi
 
-#Wait for Network and timeout after 30 seconds
-HOST="8.8.8.8"
-for i in {1..10}; do
-  ping -c1 $HOST &amp;> /dev/null &amp;&amp; break;
-done
+#Get currently selected Driver version
+SET_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
+UPDATED_CHECK="$(grep "update_check" "&plugin;/settings.cfg" | cut -d '=' -f2)"
 
-#Set variables
-KERNEL_V="$(uname -r)"
-DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V)"
-NV_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
-
-#Fallback until how updates are handled is sorted
-if [ -z "$DRIVER_AVAIL" ]; then
-  echo
-  echo "-------Main download URL not reachable, using Fallback URL-------"
-  DRIVER_AVAIL="$(wget -qO- https://s3.amazonaws.com/dnld.lime-technology.com/drivers/releases.json | jq -r '.[] | "\(.kernel) \(.version) \(.url) \(.md5) \(.size)" | select( index("'${KERNEL_V}'"))')"
-  if [ ! -z "$DRIVER_AVAIL" ]; then
-    DL_DRV="$(echo $DRIVER_AVAIL | awk '{print $2}' | head -1)"
-    DL_URL="$(echo $DRIVER_AVAIL | awk '{print $3}' | head -1)"
-    MD5_SUM="$(echo $DRIVER_AVAIL | awk '{print $4}' | head -1)"
-    DRIVER_AVAIL="$(echo $DRIVER_AVAIL | awk '{print $1}' | head -1)"
-    if [ "$(ping -c1 s3.amazonaws.com &amp;> /dev/null; echo $? )" == "0" ]; then
-      FALLBACK="true"
-    else
-      echo
-      echo "----------------Fallback URL also not reachable!-----------------"
-      echo "---Are you sure that you have a active internet connection and---"
-      echo "--------no container like PiHole running on your server?---------"
-    fi
-  fi
+#Move old package directory to new package directory to be compliant with 6.11
+if find &packages; -maxdepth 1 -type f -name "*.txz" 2>/dev/null ; then
+  mv $(find &packages; -maxdepth 1 -type f -name "*.txz") &packages;/${KERNEL_V%%-*}/ 2>/dev/null
+  CUR_V="$(ls -p &packages;/${KERNEL_V%%-*} 2&gt;/dev/null | grep -E -v '\.md5' | sort -V | tail -1)"
 fi
 
-#Check Nvidia driver version and set download variable, if Nvidia driver version
-#is not found for this kernel fall back to latest, if no Internet connection or parsing of
-#release.json failed fall back to local installed version if no local version is found exit.
-if [ "${NV_DRV_V}" == "latest" ]; then
-  if [ -z "$DRIVER_AVAIL" ]; then
-    if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
-      if [ -d &plugin; ]; then
-        rm -rf &plugin;
-      fi
+if [ "${SET_DRV_V}" == "latest" ]; then
+  get_versions
+  LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | tail -1)"
+  if [ -z "$LAT_PACKAGE" ]; then
+    if [ -z "$CUR_V" ]; then
       echo
       echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
       echo "---Can't get latest Nvidia driver version and found no installed local driver---"
+      rm -rf &plugin; &emhttp;
       exit 1
     else
-      NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
-      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
+      LAT_PACKAGE=${CUR_V}
     fi
-  else
-    DL_DRV="$(echo "$DRIVER_AVAIL" | tail -1)"
-    NV_DRV_V="${DL_DRV}"
-    #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
   fi
-elif [ "${NV_DRV_V}" == "latest_prb" ]; then
-  LAT_PRB_AVAIL="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep 'PRB' | cut -d '=' -f2 | sort -V)"
-  if [ -z "$DRIVER_AVAIL" ]; then
-    if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
-      if [ -d &plugin; ]; then
-        rm -rf &plugin;
-      fi
+elif [ "${SET_DRV_V}" == "latest_prb" ]; then
+  get_versions
+  LAT_PRB_AVAIL="$(echo "$BRANCHES" | grep 'PRB' | cut -d '=' -f2 | sort -V)"
+  if [ -z "$LAT_PRB_AVAIL" ]; then
+    if [ -z "$CUR_V" ]; then
       echo
       echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
       echo "---Can't get latest Nvidia driver version and found no installed local driver---"
+      rm -rf &plugin; &emhttp;
       exit 1
     else
-      NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
-      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
+      LAT_PACKAGE=${CUR_V}
     fi
   elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)" ]; then
     echo
@@ -233,30 +274,24 @@ elif [ "${NV_DRV_V}" == "latest_prb" ]; then
     echo "----Can't get Production Branch version and found no installed local driver-----"
     echo "-----Please wait for an hour and try it again, if it then also fails please-----"
     echo "------go to the Support Thread on the unRAID forums and make a post there!------"
+    rm -rf &plugin; &emhttp;
     exit 1
   else
-    DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)"
-    NV_DRV_V="${DL_DRV}"
-    #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
+    COMPARE="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_PRB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)"
+    LAT_PACKAGE="${COMPARE}"
   fi
 elif [ "${NV_DRV_V}" == "latest_nfb" ]; then
-  LAT_NFB_AVAIL="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep 'NFB' | cut -d '=' -f2 | sort -V)"
-  if [ -z "$DRIVER_AVAIL" ]; then
-    if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
-      if [ -d &plugin; ]; then
-        rm -rf &plugin;
-      fi
+  get_versions
+  LAT_NFB_AVAIL="$(echo "$BRANCHES" | grep 'NFB' | cut -d '=' -f2 | sort -V)"
+  if [ -z "$LAT_NFB_AVAIL" ]; then
+    if [ -z "$CUR_V" ]; then
       echo
       echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
       echo "---Can't get latest Nvidia driver version and found no installed local driver---"
+      rm -rf &plugin; &emhttp;
       exit 1
     else
-      NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
-      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
+      LAT_PACKAGE=${CUR_V}
     fi
   elif [ -z "$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)" ]; then
     echo
@@ -264,159 +299,64 @@ elif [ "${NV_DRV_V}" == "latest_nfb" ]; then
     echo "----Can't get New Feature Branch version and found no installed local driver----"
     echo "-----Please wait for an hour and try it again, if it then also fails please-----"
     echo "------go to the Support Thread on the unRAID forums and make a post there!------"
+    rm -rf &plugin; &emhttp;
     exit 1
   else
-    DL_DRV="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)"
-    NV_DRV_V="${DL_DRV}"
-    #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
+    COMPARE="$(comm -12 &lt;(echo "$DRIVER_AVAIL") &lt;(echo "$LAT_NFB_AVAIL") 2&gt; /dev/null | sort -V | tail -1)"
+    NV_DRV_V="${COMPARE}"
   fi
 else
-  if [ -z "$DRIVER_AVAIL" ]; then
-    if [ "$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "none" ]; then
-      if [ -d &plugin; ]; then
-        rm -rf &plugin;
-      fi
+  get_versions
+  LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | grep "$SET_DRV_V")"
+  if [ -z "${LAT_PACKAGE}" ]; then
+    NV_DRV_OLD=${SET_DRV_V}
+    LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | tail -1)"
+    if [ -z "${LAT_PACKAGE}" ]; then
       echo
       echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
       echo "---Can't get latest Nvidia driver version and found no installed local driver---"
-      exit 1
+      rm -rf &plugin; &emhttp;
+      exit 1  
     else
-      NV_DRV_V="$(grep "local_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
-      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
-    fi
-  else
-    DL_DRV="$(echo "$DRIVER_AVAIL" | grep "$NV_DRV_V")"
-    #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-    rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
-    if [ -z "${DL_DRV}" ]; then
-      NV_DRV_OLD=${NV_DRV_V}
-      DL_DRV="$(echo "$DRIVER_AVAIL" | tail -1)"
-      NV_DRV_V="$(echo "$DL_DRV")"
       echo
-      echo "---Can't find Nvidia Driver v${NV_DRV_OLD} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v${NV_DRV_V}---"
-      sed -i '/driver_version=/c\driver_version=latest' "&plugin;/settings.cfg"
-      #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$KERNEL_V")
-      rm -f $(ls &plugin;/packages/nvidia-*-1.txz 2>/dev/null | grep -v "$NV_DRV_V")
+      echo "---Can't find Nvidia Driver v$(echo $NV_DRV_OLD | cut -d '-' -f2) for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2)---"
     fi
   fi
 fi
 
-if [ ! -d "&plugin;/packages" ]; then
-  mkdir -p "&plugin;/packages"
-fi
-
-#Download Nvidia Driver Package
-download() {
-if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz" ; then
-  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "$(wget -qO- "https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}/nvidia-${DL_DRV}-${KERNEL_V}-1.txz.md5" | cut -d ' ' -f1)" ]; then
-    if [ -d &plugin; ]; then
-      rm -rf &plugin;
-    fi
-    echo
-    echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
-    echo "--------------------------------CHECKSUM ERROR!---------------------------------"
-    exit 1
-  fi
-  sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
-  echo
-  echo "----Successfully downloaded Nvidia Driver Package v${NV_DRV_V}, please wait!----"
-else
-  if [ -d &plugin; ]; then
-    rm -rf &plugin;
-  fi
-  echo
-  echo "--------------Can't download Nvidia Driver Package v${NV_DRV_V}-----------------"
-  exit 1
-fi
-}
-
-#Download Nvidia Driver Package Fallback
-download_fb() {
-if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" "$(echo "$DL_URL")" ; then
-  if [ "$(md5sum "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz" | cut -d ' ' -f1)" != "${MD5_SUM}" ]; then
-    if [ -d &plugin; ]; then
-      rm -rf &plugin;
-    fi
-    echo
-    echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
-    echo "--------------------------------CHECKSUM ERROR!---------------------------------"
-    exit 1
-  fi
-  sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
-  echo
-  echo "-----------Sucessfully downloaded Nvidia Driver Package v${NV_DRV_V}-------------"
-else
-  if [ -d &plugin; ]; then
-    rm -rf &plugin;
-  fi
-  echo
-  echo "---------------Can't download Nvidia Driver Package v${NV_DRV_V}-----------------"
-  exit 1
-fi
-}
-
-#Check if driver is already downloaded
-check() {
-if [ ! -f &plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz ]; then
-  echo
-  echo "+=============================================================================="
-  echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
-  echo "|"
-  echo "| Don't close this window with the red 'X' in the top right corner until the 'DONE' button is displayed!"
-  echo "|"
-  echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
-  echo "+=============================================================================="
-  echo
-  echo "-----------------Downloading Nvidia Driver Package v${NV_DRV_V}------------------"
-  echo "----------This could take some time, please don't close this window!------------"
-  if [ "${FALLBACK}" == "true" ]; then
-    download_fb
-  else
-    download
-  fi
-else
-  echo
-  echo "--------------------Nvidia driver v${NV_DRV_V} found locally---------------------"
-fi
-}
-
-#Install driver package
-install() {
-/sbin/installpkg "&plugin;/packages/nvidia-${NV_DRV_V}-${KERNEL_V}-1.txz"
-depmod >> /dev/null
-modprobe nvidia  >> /dev/null
-if [ "$(which Xorg 2>/dev/null)" ] &amp;&amp; [ "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "disable_xconfig" | cut -d '=' -f2)" != "true" ]; then
-  nvidia-xconfig --output-xconfig=/etc/X11/xorg.conf --silent 2>/dev/null
-fi
-if [ "$(cat &plugin;/settings.cfg | grep "local_version=" | cut -d '=' -f2)" != "${NV_DRV_V}" ]; then
-  sed -i '/local_version=/c\local_version='${NV_DRV_V}'' "&plugin;/settings.cfg"
-fi
-if [[ "$(cat &plugin;/settings.cfg | grep "driver_version=" | cut -d '=' -f2)" != "latest" &amp;&amp; "$(cat &plugin;/settings.cfg | grep "driver_version=" | cut -d '=' -f2)" != "latest_prb" &amp;&amp; "$(cat &plugin;/settings.cfg | grep "driver_version=" | cut -d '=' -f2)" != "latest_nfb" ]]; then
-  sed -i '/update_check=/c\update_check=false' "&plugin;/settings.cfg"
-fi
-if [ "$(cat &plugin;/settings.cfg | grep "update_check=" | cut -d '=' -f2)" == "true" ]; then
-  (crontab -l ; echo ""$((0 + $RANDOM % 59))" "$(shuf -i 8-9 -n 1)" * * * /usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1") | crontab -
-fi
-}
+#Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
+rm -f $(ls -d &packages;/* 2>/dev/null | grep -v "${KERNEL_V%%-*}")
+rm -f $(ls &packages;/${KERNEL_V%%-*}/* 2>/dev/null | grep -v "$LAT_PACKAGE")
 
 #Check if Nvidia Driver Package is already downloaded
-if [ -f /usr/bin/nvidia-smi ]; then
+check
+
+#Install Nvidia Driver Package
+if ! modinfo nvidia -0 >/dev/null 2>&amp;1 ; then
   echo
-  echo "-----------------------Nvidia Drivers already installed!-------------------------"
-  if [ "$(cat &plugin;/settings.cfg | grep "update_check=" | cut -d '=' -f2)" == "true" ]; then
-    if [ ! "$(crontab -l | grep "/usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh")" ]; then
-      (crontab -l ; echo ""$((0 + $RANDOM % 59))" "$(shuf -i 8-9 -n 1)" * * * /usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1") | crontab -
-    fi
-  fi
-  exit 0
+  echo "-----------------Installing Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-------------------"
+  install > /dev/null
+  activate
 else
-  check
+  activate
+fi
+
+#Enable update check
+if [ "$UPDATE_CHECK" == "true" ]; then
+ if [ ! "$(crontab -l | grep "/usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh")" ]; then
+   (crontab -l ; echo ""$((0 + $RANDOM % 59))" "$(shuf -i 8-9 -n 1)" * * * /usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1") | crontab -
+fi
+
+#Display message to disable and enable Docker on first installation or display successful message
+if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
+  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply" -i "alert" -l "/Settings/DockerSettings"
+  echo
+  echo "------------Installation of Nvidia driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) successful----------------"
+  echo
+  echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply"
+else
+  echo
+  echo "--------------Installation of Nvidia driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) successful--------------"
 fi
 
 #Check if Plugin Update Helper is downloaded and up-to-date
@@ -459,24 +399,6 @@ if [ -z "$(ps aux | grep -E "inotifywait -q /boot/changes.txt -e move_self,delet
   echo "/usr/bin/plugin_update_helper" | at now -M &gt; /dev/null 2&gt;&amp;1
 fi
 
-#Install Nvidia Driver Package
-echo
-echo "-----------------Installing Nvidia Driver Package v${NV_DRV_V}-------------------"
-install > /dev/null
-
-#Display message to disable and enable Docker on first installation or display successful message
-if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
-  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply" -i "alert" -l "/Settings/DockerSettings"
-  sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
-  echo
-  echo "------------Installation of Nvidia driver v${NV_DRV_V} successful----------------"
-  echo
-  echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply"
-else
-  echo
-  echo "--------------Installation of Nvidia driver v${NV_DRV_V} successful--------------"
-fi
-
 </INLINE>
 </FILE>
 
@@ -489,8 +411,7 @@ echo "----------------------------------------"
 # Remove plugin related files
 removepkg &name;-&version;
 crontab -l | grep -v '/usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &amp;&gt;/dev/null 2&gt;&amp;1'  | crontab -
-rm -rf /usr/local/emhttp/plugins/&name;
-rm -rf &plugin;
+rm -rf &plugin; &emhttp;
 echo
 echo "--------------------------------------------------------------------------------"
 echo "-------------Nvidia Driver uninstalled, please reboot your server!--------------"
