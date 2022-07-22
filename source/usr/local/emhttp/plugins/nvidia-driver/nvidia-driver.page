@@ -38,15 +38,11 @@ $eachlines = file($filename, FILE_IGNORE_NEW_LINES);
 </script>
 
 <script>
-//Disable submit button if no radio button is selected
-$(function(){
-    $("input[type='radio']").change(function(){
-
-        $("input[type='submit']").prop("disabled", false);
-        //Or
-        //$("input[type='submit']").removeAttr("disabled");
-    });
-});
+function changeVersion(form) {
+    var package = form.drv_version.value;
+    openBox("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh&arg1=update_version&arg2="+package,"Downloading Package",600,800,true);
+    return false;
+    }
 </script>
 
 <h1 style="text-align: center;"><a href="https://forums.unraid.net/" target="_blank" rel="noopener"><span style="color: green;">Nvidia Driver Package</span></a></h1>
@@ -121,13 +117,13 @@ $(function(){
                 <td>
                 </td>
                 <td>
-                    <p><input name="updatedrvv" disabled="disabled" type="submit" value="Update"/></p>
+                    <input type="button" value="Update & Download" onclick="changeVersion(this.form)">
                 </td>
             </tr>
             </form>
             </table>
 	<table class="settings">
-		<p style="text-align: left; font-weight: bold;">ATTENTION: If you set the version to 'latest', 'Production Branch' or 'New Feature Branch' the plugin will check on every restart if a newer driver is available and download it.<br>Please keep in mind that the boot process maybe take longer than usual since the plugin downloads and installs the newer driver on boot.</p>
+		<p style="text-align: left; font-weight: bold;">ATTENTION: If you set the version to 'latest', 'Production Branch' or 'New Feature Branch' you either have to enable the Driver Update Notification (this will download the driver automatically) or if you disabled the Driver Update Notification you manually have to click the button "Update & Download" to download a newer driver.<br>Please keep in mind, to install a newer driver you have to reboot your server.</p>
 		<br>
 		<p><b><font size+1> Latest versions:</font></b></p>
 		<ul>
@@ -156,8 +152,6 @@ $(function(){
             <td style="color: #99cc00;"><b><?=`uname -r`?></b></td>
         </tr>
         <tr>
-        <td>Compile Date:</td>
-            <td style="color: #99cc00;"><b><?=`uname -v | cut -d ' ' -f3-`?></b></td>
         </tr>
     </table>
     <? if (isset($selected_v ) === true && trim($selected_v ) === 'latest' || trim($selected_v ) === 'latest_prb' || trim($selected_v ) === 'latest_nfb'): ?>
@@ -183,57 +177,6 @@ $(function(){
 	</table>
      <? endif; ?>
 </div>
-
-<div style="width: 50%; float:left">
-	<div id="title">
-        <span class="left"></span>
-    </div>
-	<table class="settings">
-		<td>
-		<b>This button allows you to download the selected Nvidia Driver right now instead of at boot.</b><br><i>You can also use this button to verify the Checksum of the downloaded driver.</i>
-		</td>
-	</table>
-	<table class="settings">
-	<td>
-		<td><?php
-		echo "<a href=\"#\" title='"._("Download Driver")."' onclick=\"openBox('/usr/local/emhttp/plugins/nvidia-driver/include/download.sh','Downloading Driver',500,800,false);return false\"><button type='button'>Download</button></a></a>";
-		?></td>
-	</td>
-    </table>
-</div>
-
-
-<?php
-//Post driver version
-if(isset($_POST['updatedrvv'])) {
-$drv_version = $_POST["drv_version"];
-if ($drv_version == "latest"){
-shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version ".escapeshellarg($drv_version)."");
-if($latest_v != $installed_v){
-shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver version: ".escapeshellarg($latest_v)."\" -i \"alert\"");
-}
-echo '<script>parent.window.location.reload();</script>';
-} elseif ($drv_version == "latest_prb"){
-shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version ".escapeshellarg($drv_version)."");
-if($installed_v != $latest_prb_v){
-shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver version: ".escapeshellarg($latest_prb_v)."\" -i \"alert\"");
-}
-echo '<script>parent.window.location.reload();</script>';
-} elseif ($drv_version == "latest_nfb"){
-shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version ".escapeshellarg($drv_version)."");
-if("$installed_v" != $latest_nfb_v){
-shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver version: ".escapeshellarg($latest_nfb_v)."\" -i \"alert\"");
-}
-echo '<script>parent.window.location.reload();</script>';
-}else {
-shell_exec("/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh update_version ".escapeshellarg($drv_version)."");
-if($drv_version != $installed_v){
-shell_exec("/usr/local/emhttp/plugins/dynamix/scripts/notify -e \"Nvidia Driver Installation\" -d \"Please restart your server to install the Nvidia driver version: ".escapeshellarg($drv_version)."\" -i \"alert\"");
-}
-echo '<script>parent.window.location.reload();</script>';
-}
-}
-?>
 
 <?php
 if(isset($_POST['changeUPDcheck'])) {
