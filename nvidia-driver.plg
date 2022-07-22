@@ -197,6 +197,7 @@ if ! ls -1 &packages;/${KERNEL_V%%-*}/ | grep -q "${PACKAGE}" ; then
   echo "----------This could take some time, please don't close this window!------------"
   download
 else
+  LAT_PACKAGE=$CUR_V
   echo
   echo "--------------------Nvidia driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) found locally---------------------"
 fi
