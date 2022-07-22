@@ -2,19 +2,20 @@
 
 function update(){
 KERNEL_V="$(uname -r)"
+PACKAGE="nvidia"
 CURENTTIME=$(date +%s)
 CHK_TIMEOUT=300
 if [ -f /tmp/nvidia_driver ]; then
   FILETIME=$(stat /tmp/nvidia_driver -c %Y)
   DIFF=$(expr $CURENTTIME - $FILETIME)
   if [ $DIFF -gt $CHK_TIMEOUT ]; then
-    echo -n "$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -8)" > /tmp/nvidia_driver
+    echo -n "$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
     if [ ! -s /tmp/nvidia_driver ]; then
       echo -n "$(modinfo nvidia | grep "version:" | awk '{print $2}' | head -1)" > /tmp/nvidia_driver
     fi
   fi
 else
-  echo -n "$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E 'nvidia-.*.txz' | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -8)" > /tmp/nvidia_driver
+  echo -n "$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
   if [ ! -s /tmp/nvidia_driver ]; then
     echo -n "$(modinfo nvidia | grep "version:" | awk '{print $2}' | head -1)" > /tmp/nvidia_driver
   fi
@@ -39,6 +40,7 @@ if [[ "${1}" != "latest" && "${1}" != "latest_prb" && "${1}" != "latest_nfb" ]];
   sed -i "/update_check=/c\update_check=false" "/boot/config/plugins/nvidia-driver/settings.cfg"
   echo -n "$(crontab -l | grep -v '/usr/local/emhttp/plugins/nvidia-driver/include/update-check.sh &>/dev/null 2>&1'  | crontab -)"
 fi
+/usr/local/emhttp/plugins/nvidia-driver/include/download.sh
 }
 
 function get_latest_version(){
