@@ -9,7 +9,7 @@
   <!ENTITY md5       "f39e49358ff626015987e3649bb51421">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
-  <!ENTITY packages    "/boot/config/plugins/&name;/packages">
+  <!ENTITY packages  "/boot/config/plugins/&name;/packages">
 ]>
 
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
@@ -156,6 +156,7 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&packages;/${KE
     exit 1
   fi
   echo
+  sed -i '/driver_version=/c\driver_version=latest' "&plugin;/settings.cfg"
   echo "----Successfully downloaded Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2), please wait!----"
 else
   echo
