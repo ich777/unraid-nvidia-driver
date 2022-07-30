@@ -20,7 +20,7 @@ ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run --kernel-name=$UNAME \
   --application-profile-path=/NVIDIA/usr/share/nvidia \
   --proc-mount-point=/NVIDIA/proc \
   --kernel-install-path=/NVIDIA/lib/modules/${UNAME}/kernel/drivers/video \
-  --compat32-prefix=/NVIDIA/usr
+  --compat32-prefix=/NVIDIA/usr \
   --compat32-libdir=/lib \
   --install-compat32-libs \
   --no-x-check \
