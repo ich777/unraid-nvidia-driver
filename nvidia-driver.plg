@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2022.08.04">
+  <!ENTITY version   "2022.09.22">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2022.09.22
+- Bugfix of removal from old Kernel package directories
 
 ###2022.08.04
 - Bugfix for Latest Production and New Feature Branch downloads
@@ -269,7 +272,7 @@ fi
 check
 
 #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-rm -f $(ls -d &packages;/* 2>/dev/null | grep -v "${KERNEL_V%%-*}")
+rm -rf $(ls -d &packages;/* 2>/dev/null | grep -v "${KERNEL_V%%-*}")
 rm -f $(ls &packages;/${KERNEL_V%%-*}/* 2>/dev/null | grep -v "$LAT_PACKAGE")
 
 #Install Nvidia Driver Package
