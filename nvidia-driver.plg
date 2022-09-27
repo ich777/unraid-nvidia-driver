@@ -16,6 +16,9 @@
 
 <CHANGES>
 
+###2022.09.27a
+- Bugfix re-added missing variables to plugin file
+
 ###2022.09.27
 - Bugfix for Update Check not updating
 
@@ -259,7 +262,9 @@ fi
 #Add update check entry if not exists
 grep -q "update_check=" &plugin;/settings.cfg || echo "update_check=true" &gt;&gt; &plugin;/settings.cfg
 
-UPDATE_CHECK="$(cat &plugin;/settings.cfg | grep "update_check" | head -1 | cut -d '=' -f2)"
+#Get currently selected Driver version
+SET_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
+UPDATE_CHECK="$(grep "update_check" &plugin;/settings.cfg | head -1 | cut -d '=' -f2)"
 
 if [ "$(grep -q "local_version=" &plugin;/settings.cfg)" ]; then
   sed -i '/local_version=/d' &plugin;/settings.cfg
