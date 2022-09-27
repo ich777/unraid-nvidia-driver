@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2022.09.22">
+  <!ENTITY version   "2022.09.27">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "bfdc79add223f5ceb38d183afae91f74">
+  <!ENTITY md5       "1f70ccee50d720b89142e5d425a5ef6e">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
   <!ENTITY packages  "/boot/config/plugins/&name;/packages">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2022.09.27
+- Bugfix for Update Check not updating
 
 ###2022.09.22
 - Bugfix for old package directories
@@ -254,9 +257,7 @@ update_check=true' > "&plugin;/settings.cfg"
 fi
 
 #Add update check entry if not exists
-if [ ! "$(grep -q "update_check=" &plugin;/settings.cfg)" ]; then
-  echo "update_check=true" &gt;&gt; &plugin;/settings.cfg
-fi
+grep -q "update_check=" &plugin;/settings.cfg || echo "update_check=true" >> &plugin;/settings.cfg
 
 if [ "$(grep -q "local_version=" &plugin;/settings.cfg)" ]; then
   sed -i '/local_version=/d' &plugin;/settings.cfg
