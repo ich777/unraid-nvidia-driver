@@ -257,7 +257,7 @@ update_check=true' > "&plugin;/settings.cfg"
 fi
 
 #Add update check entry if not exists
-grep -q "update_check=" &plugin;/settings.cfg || echo "update_check=true" >> &plugin;/settings.cfg
+grep -q "update_check=" &plugin;/settings.cfg || echo "update_check=true" &gt;&gt; &plugin;/settings.cfg
 
 if [ "$(grep -q "local_version=" &plugin;/settings.cfg)" ]; then
   sed -i '/local_version=/d' &plugin;/settings.cfg
