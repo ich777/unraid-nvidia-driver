@@ -65,7 +65,7 @@ echo -n "$(modinfo nvidia | grep -w "version:" | awk '{print $2}')"
 }
 
 function update_check(){
-echo -n "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "update_check" | cut -d '=' -f2)"
+echo -n "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "update_check" | head -1 | cut -d '=' -f2)"
 }
 
 function change_update_check(){
