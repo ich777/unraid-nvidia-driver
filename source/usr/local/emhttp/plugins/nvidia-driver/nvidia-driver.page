@@ -15,6 +15,10 @@ $latest_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh 
 //Get branch versions
 $latest_prb_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_prb');
 $latest_nfb_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_nfb');
+$latest_nos_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_nos');
+
+//Get driver license
+$module_license = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_license');
 
 //Get current installed driver version
 $installed_v = shell_exec('/usr/local/emhttp/plugins/nvidia-driver/include/exec.sh get_installed_version');
@@ -53,12 +57,23 @@ function changeVersion(form) {
     </div>
     <table class="settings">
         <tr>
-            <td><b><font size="+1">nVidia Info:</font></b></td>
+            <td><b><font size="+1">Nvidia Info:</font></b></td>
         </tr>
         <tr>
             <td>Nvidia Driver Version:</td>
             <td style="color:green"><b><?=`nvidia-smi | grep "Driver Version" | cut -d ' ' -f3`?></b></td>
         </tr>
+        <? if (isset($module_license ) === true && trim($module_license ) === 'OPENSOURCE'): ?>
+        <tr>
+            <td>Open Source Kernel Module:</td>
+            <td style="color:blue"><b>Yes</b></td>
+        </tr>
+        <? elseif (isset($module_license ) === true && trim($module_license ) === 'PROPRIETARY'): ?>
+        <tr>
+            <td>Open Source Kernel Module:</td>
+            <td style="color:green"><b>No</b></td>
+        </tr>
+        <? endif; ?>
         <tr>
             <td>Installed GPU(s):</td>
             <td style="color:green"><b><?=`nvidia-smi --query-gpu=index,name,gpu_bus_id,uuid --format=csv,noheader | tr "," "\n" | sed 's/^[ \t]*//' | sed -e s/00000000://g | sed '0~4G' | sed 's/^[0-9]$/&:/' | sed 's/$/<br>/'`?></b></td>
@@ -90,6 +105,11 @@ function changeVersion(form) {
                     <p><input type="radio" name="drv_version" value="latest_nfb" <?php echo ( $selected_v == "latest_nfb") ? 'checked="checked"' : ''; ?><b><font color = "tomato"><b>New Feature Branch</font>:</b> <?php echo "v$latest_nfb_v"; ?></p>
                     <? else: ?>
                     <p><b><font color = "tomato">New Feature Branch</font>:</b> <i>Not found for this unRAID version!</i></p>
+                    <? endif; ?>
+                    <? if (isset($latest_nos_v ) === true && trim($latest_nos_v ) !== ''): ?>
+                    <p><input type="radio" name="drv_version" value="latest_nos" <?php echo ( $selected_v == "latest_nos") ? 'checked="checked"' : ''; ?><b><font color = "blue"><b>Open Source Driver</font>:</b> <?php echo "v$latest_nos_v"; ?><em><b> - Please see readme below!</b></em></p>
+                    <? else: ?>
+                    <p><b><font color = "blue">Open Source Driver</font>:</b> <i>Not found for this unRAID version!</i></p>
                     <? endif; ?>
                 </td>
                 </tr>
@@ -130,7 +150,8 @@ function changeVersion(form) {
 		  <p>
 		  <li><b>latest</b> - will always download the latest driver version available regardless of the branch</li><br>
 		  <li><b>Production Branch</b>  - This is the long lifecycle (i.e., multiple releases in a branch over a single year period) driver branch providing ISV Certification, optimal stability and performance, and regular security updates for NVIDIA RTX/Quadro professional customers. This driver was previously named, Optimal Driver for Enterprise (ODE), and is most commonly deployed in production systems at enterprises.</li><br>
-		  <li><b>New Feature Branch</b>  - This is a short lived branch driver (i.e., 1-2 releases per branch only) where new NVIDIA RTX/Quadro features are introduced and made available between Production Branch releases. New Feature Branch drivers, previously named, Quadro New Feature (QNF), typically provide support for new operating systems, third party hardware, and game engines.</li>
+		  <li><b>New Feature Branch</b>  - This is a short lived branch driver (i.e., 1-2 releases per branch only) where new NVIDIA RTX/Quadro features are introduced and made available between Production Branch releases. New Feature Branch drivers, previously named, Quadro New Feature (QNF), typically provide support for new operating systems, third party hardware, and game engines.</li><br>
+		  <li><b>Open Source Driver</b>  - This package includes the Open Source Kernel modules and the libraries/execuatables from the proprietary Nvidia driver package.<br><b>Supported GPUs:</b> This driver package only supports Turing based cards and newer!<br><b><font color = "red">ATTENTION:</font></b> If you want to use the Open Source driver with GeForce and/or Workstation cards you have to create the file "<code>/boot/config/modprobe.d/nvidia.conf</code>" on your USB boot device with the contents, before you reboot your server:<br><code>options nvidia NVreg_OpenRmEnableUnsupportedGpus=1</code><br><p><em>For more information see <a href="https://us.download.nvidia.com/XFree86/Linux-x86_64/515.76/README/kernel_open.html">here</a>.</em></p></li>
 		  </p></ul>
 	</table>
 </div>
