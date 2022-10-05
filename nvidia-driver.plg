@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2022.09.27a">
+  <!ENTITY version   "2022.10.05">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "1f70ccee50d720b89142e5d425a5ef6e">
+  <!ENTITY md5       "4fde228450e71277bba8a4a849cf56d9">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
   <!ENTITY packages  "/boot/config/plugins/&name;/packages">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2022.10.05
+- Added Nvidia Open Source drivers (packages will be available after a bug in the Nvidia Open Source Kernel modules is fixed)
 
 ###2022.09.27a
 - Bugfix re-added missing variables to plugin file
@@ -176,10 +179,10 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&packages;/${KE
   fi
   echo
   sed -i '/driver_version=/c\driver_version=latest' "&plugin;/settings.cfg"
-  echo "----Successfully downloaded Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2), please wait!----"
+  echo "----Successfully downloaded Nvidia ${OS}Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2), please wait!----"
 else
   echo
-  echo "--------------Can't download Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-----------------"
+  echo "--------------Can't download Nvidia ${OS}Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-----------------"
   rm -rf &plugin; &emhttp;
   exit 1
 fi
@@ -191,7 +194,7 @@ if [ -z "$LAT_PACKAGE" ]; then
   if [ -z "$CUR_V" ]; then
     echo
     echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
-    echo "---Can't get latest Nvidia driver version and found no installed local driver---"
+    echo "---Can't get latest Nvidia ${OS}driver version and found no installed local driver---"
     rm -rf &plugin; &emhttp;
     exit 1
   else
@@ -213,13 +216,13 @@ if ! ls -1 &packages;/${KERNEL_V%%-*}/ | grep -q "${PACKAGE}" ; then
   echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
   echo "+=============================================================================="
   echo
-  echo "-----------------Downloading Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)------------------"
+  echo "-----------------Downloading Nvidia ${OS}Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)------------------"
   echo "----------This could take some time, please don't close this window!------------"
   download
 else
   LAT_PACKAGE=$CUR_V
   echo
-  echo "--------------------Nvidia driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) found locally---------------------"
+  echo "--------------------Nvidia ${OS}driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) found locally---------------------"
 fi
 }
 
@@ -239,18 +242,6 @@ if [[ "$SET_DRV_V" != "latest" &amp;&amp; "$SET_DRV_V" != "latest_prb" &amp;&amp
 fi
 }
 
-#Set variables
-KERNEL_V="$(uname -r)"
-PACKAGE="nvidia"
-DL_URL="https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}"
-
-if [ ! -d "&packages;/${KERNEL_V%%-*}" ]; then
-  mkdir -p "&packages;/${KERNEL_V%%-*}"
-  CUR_V=""
-else
-  CUR_V="$(ls -p &packages;/${KERNEL_V%%-*} 2&gt;/dev/null | grep -E -v '\.md5' | sort -V | tail -1)"
-fi
-
 #Create settings file if not found
 if [ ! -f "&plugin;/settings.cfg" ]; then
   echo 'first_installation=true
@@ -262,12 +253,27 @@ fi
 #Add update check entry if not exists
 grep -q "update_check=" &plugin;/settings.cfg || echo "update_check=true" &gt;&gt; &plugin;/settings.cfg
 
-#Get currently selected Driver version
-SET_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
-UPDATE_CHECK="$(grep "update_check" &plugin;/settings.cfg | head -1 | cut -d '=' -f2)"
-
 if [ "$(grep -q "local_version=" &plugin;/settings.cfg)" ]; then
   sed -i '/local_version=/d' &plugin;/settings.cfg
+fi
+
+#Set variables
+KERNEL_V="$(uname -r)"
+SET_DRV_V="$(grep "driver_version" "&plugin;/settings.cfg" | cut -d '=' -f2)"
+if [ "${SET_DRV_V}" == "latest_nos" ]; then
+  export PACKAGE="nvos"
+  export OS="Open Source "
+else
+  export PACKAGE="nvidia"
+fi
+DL_URL="https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}"
+UPDATE_CHECK="$(grep "update_check" &plugin;/settings.cfg | head -1 | cut -d '=' -f2)"
+
+if [ ! -d "&packages;/${KERNEL_V%%-*}" ]; then
+  mkdir -p "&packages;/${KERNEL_V%%-*}"
+  CUR_V=""
+else
+  CUR_V="$(ls -p &packages;/${KERNEL_V%%-*} 2&gt;/dev/null | grep -E -v '\.md5' | sort -V | tail -1)"
 fi
 
 #Move old package directory to new package directory to be compliant with 6.11
@@ -286,7 +292,7 @@ rm -f $(ls &packages;/${KERNEL_V%%-*}/* 2>/dev/null | grep -v "$LAT_PACKAGE")
 #Install Nvidia Driver Package
 if ! modinfo nvidia -0 >/dev/null 2>&amp;1 ; then
   echo
-  echo "-----------------Installing Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-------------------"
+  echo "-----------------Installing Nvidia ${OS}Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-------------------"
   install > /dev/null
   activate
 else
@@ -302,16 +308,16 @@ fi
 
 #Display message to disable and enable Docker on first installation or display successful message
 if [ "$(grep "first_installation=" "&plugin;/settings.cfg" | cut -d '=' -f2)" == "true" ]; then
-  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply" -i "alert" -l "/Settings/DockerSettings"
+  /usr/local/emhttp/plugins/dynamix/scripts/notify -e "Nvidia Driver" -d "Please make sure to disable and enable Docker if you installed the Nvidia ${OS}driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply" -i "alert" -l "/Settings/DockerSettings"
   sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
   echo
-  echo "------------Installation of Nvidia driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) successful----------------"
+  echo "------------Installation of Nvidia ${OS}driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) successful----------------"
   echo
-  echo "Please make sure to disable and enable Docker if you installed the Nvidia driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply"
+  echo "Please make sure to disable and enable Docker if you installed the Nvidia ${OS}driver for the first time! Settings -> Docker -> Enable Docker 'No' -> Apply -> Enable Docker 'Yes' -> Apply"
 else
   sed -i '/first_installation=true/c\first_installation=false' "&plugin;/settings.cfg"
   echo
-  echo "--------------Installation of Nvidia driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) successful--------------"
+  echo "--------------Installation of Nvidia ${OS}driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) successful--------------"
 fi
 
 #Check if Plugin Update Helper is downloaded and up-to-date
