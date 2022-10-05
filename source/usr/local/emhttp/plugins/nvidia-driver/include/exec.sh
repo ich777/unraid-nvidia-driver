@@ -9,13 +9,18 @@ if [ -f /tmp/nvidia_driver ]; then
   FILETIME=$(stat /tmp/nvidia_driver -c %Y)
   DIFF=$(expr $CURENTTIME - $FILETIME)
   if [ $DIFF -gt $CHK_TIMEOUT ]; then
+    DRIVERS="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | sort -V)"
+    echo -n "$(grep ${PACKAGE} <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
+    echo -n "$(grep nvos <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -1)" > /tmp/nvos_driver
     echo -n "$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
     if [ ! -s /tmp/nvidia_driver ]; then
       echo -n "$(modinfo nvidia | grep "version:" | awk '{print $2}' | head -1)" > /tmp/nvidia_driver
     fi
   fi
 else
-  echo -n "$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
+  DRIVERS="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | sort -V)"
+  echo -n "$(grep ${PACKAGE} <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
+  echo -n "$(grep nvos <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvos_driver
   if [ ! -s /tmp/nvidia_driver ]; then
     echo -n "$(modinfo nvidia | grep "version:" | awk '{print $2}' | head -1)" > /tmp/nvidia_driver
   fi
@@ -56,12 +61,27 @@ function get_nfb(){
 echo -n "$(comm -12 /tmp/nvidia_driver <(echo "$(cat /tmp/nvidia_branches | grep 'NFB' | cut -d '=' -f2 | sort -V)") | tail -1)"
 }
 
+function get_nos(){
+echo -n "$(cat /tmp/nvos_driver | sort -V | tail -1)"
+}
+
 function get_selected_version(){
 echo -n "$(cat /boot/config/plugins/nvidia-driver/settings.cfg | grep "driver_version" | cut -d '=' -f2)"
 }
 
 function get_installed_version(){
 echo -n "$(modinfo nvidia | grep -w "version:" | awk '{print $2}')"
+}
+
+function get_license(){
+LICENSE="$(modinfo nvidia 2>/dev/null | grep "license" | awk '{print $2}')"
+if [ -z "${LICENSE}" ]; then
+  echo -n "NONE"
+elif [ "${LICENSE}" == "NVIDIA" ]; then
+  echo -n "PROPRIETARY"
+else
+  echo -n "OPENSOURCE"
+fi
 }
 
 function update_check(){

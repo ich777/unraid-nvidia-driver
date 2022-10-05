@@ -2,12 +2,18 @@
 
 # Define Variables
 export KERNEL_V="$(uname -r)"
-export PACKAGE="nvidia"
-export DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E ${PACKAGE} | grep -E -v '\.md5$' | sort -V)"
-export BRANCHES="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep -v "UPDATED")"
-export DL_URL="https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}"
 export SET_DRV_V="$(grep "driver_version" "/boot/config/plugins/nvidia-driver/settings.cfg" | cut -d '=' -f2)"
-export CUR_V="$(ls -p /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*} 2>/dev/null | grep -E -v '\.md5' | sort -V | tail -1)"
+if [ "${SET_DRV_V}" == "latest_nos" ]; then
+  export PACKAGE="nvos"
+  export OS="Open Source "
+  LAT_NOS_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | grep "${PACKAGE}" | awk -F "-" '{print $2}' | sort -V | tail -1)"
+else
+  export PACKAGE="nvidia"
+  export DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E ${PACKAGE} | grep -E -v '\.md5$' | sort -V)"
+  export BRANCHES="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep -v "UPDATED")"
+fi
+export DL_URL="https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}"
+export CUR_V="$(nvidia-smi | grep NVIDIA-SMI | cut -d ' ' -f3)"
 
 #Download Nvidia Driver Package
 download() {
@@ -17,7 +23,7 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "/boot/config/pl
     echo
     echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
     echo "--------------------------------CHECKSUM ERROR!---------------------------------"
-    rm -rf /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/${LAT_PACKAGE}
+    rm -rf /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/${LAT_PACKAGE}*
     exit 1
   fi
   echo
@@ -41,21 +47,21 @@ if ! ls -1 /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/ | grep -
   echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
   echo "+=============================================================================="
   echo
-  echo "----------------Downloading Nvidia Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-----------------"
+  echo "----------------Downloading Nvidia ${OS}Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2)-----------------"
   echo "---------This could take some time, please don't close this window!------------"
   download
 else
   echo
-  echo "---------Noting to do, Nvidia Drivers v$(echo $LAT_PACKAGE | cut -d '-' -f2) already downloaded!---------"
+  echo "--------Nothing to do, Nvidia ${OS}Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2) already downloaded!---------"
   echo
   echo "------------------------------Verifying CHECKSUM!------------------------------"
   if [ "$(md5sum /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/${LAT_PACKAGE} | awk '{print $1}')" != "$(cat /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/${LAT_PACKAGE}.md5 | awk '{print $1}')" ]; then
-    rm -rf /boot/config/plugins/nvidia-driver/packages/${LAT_PACKAGE}
+    rm -rf /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/${LAT_PACKAGE}*
     echo
     echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR-----"
     echo "--------------------------------CHECKSUM ERROR!--------------------------------"
     echo
-    echo "---------------Trying to redownload the Nvidia Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2)-------------"
+    echo "---------------Trying to redownload the Nvidia ${OS}Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2)-------------"
     echo
     echo "+=============================================================================="
     echo "| WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING"
@@ -68,8 +74,8 @@ else
   else
     echo
     echo "----------------------------------CHECKSUM OK!---------------------------------"
+    exit 0
   fi
-  exit 0
 fi
 }
 
@@ -88,7 +94,7 @@ if [ "${SET_DRV_V}" == "latest" ]; then
       echo "------go to the Support Thread on the Unraid forums and make a post there!------"
       exit 1
     else
-      LAT_PACKAGE=$CUR_V
+      LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   fi
 elif [ "${SET_DRV_V}" == "latest_prb" ]; then
@@ -102,7 +108,7 @@ elif [ "${SET_DRV_V}" == "latest_prb" ]; then
       echo "------go to the Support Thread on the Unraid forums and make a post there!------"
       exit 1
     else
-      LAT_PACKAGE=$CUR_V
+      LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   elif [ -z "$DRIVER_AVAIL" ]; then
     if [ -z "${CUR_V}" ]; then
@@ -113,10 +119,11 @@ elif [ "${SET_DRV_V}" == "latest_prb" ]; then
       echo "------go to the Support Thread on the Unraid forums and make a post there!------"
       exit 1
     else
-      LAT_PACKAGE=$CUR_V
+      LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   else
-    if [ -z "$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2) <(echo "$LAT_PRB_AVAIL") | sort -V | tail -1)" ]; then
+    LAT_PRB_V="$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2) <(echo "$LAT_PRB_AVAIL") | sort -V | tail -1)"
+    if [ -z "${LAT_PRB_V}" ]; then
       if [ -z "${CUR_V}" ]; then
         echo
         echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
@@ -130,7 +137,7 @@ elif [ "${SET_DRV_V}" == "latest_prb" ]; then
         sed -i '/driver_version=/c\driver_version=latest' "/boot/config/plugins/nvidia-driver/settings.cfg"
       fi
     else
-      LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | grep "$LAT_PRB_AVAIL")"
+      LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | grep "$LAT_PRB_V")"
     fi
   fi
 elif [ "${SET_DRV_V}" == "latest_nfb" ]; then
@@ -144,7 +151,7 @@ elif [ "${SET_DRV_V}" == "latest_nfb" ]; then
       echo "------go to the Support Thread on the Unraid forums and make a post there!------"
       exit 1
     else
-      LAT_PACKAGE=$CUR_V
+      LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   elif [ -z "$DRIVER_AVAIL" ]; then
     if [ -z "${CUR_V}" ]; then
@@ -155,10 +162,11 @@ elif [ "${SET_DRV_V}" == "latest_nfb" ]; then
       echo "------go to the Support Thread on the Unraid forums and make a post there!------"
       exit 1
     else
-      LAT_PACKAGE=$CUR_V
+      LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   else
-    if [ -z "$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2) <(echo "$LAT_NFB_AVAIL") | sort -V | tail -1)" ]; then
+    LAT_NFB_V="$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2) <(echo "$LAT_NFB_AVAIL") | sort -V | tail -1)"
+    if [ -z "${LAT_NFB_V}" ]; then
       if [ -z "${CUR_V}" ]; then
         echo
         echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
@@ -172,8 +180,24 @@ elif [ "${SET_DRV_V}" == "latest_nfb" ]; then
         sed -i '/driver_version=/c\driver_version=latest' "/boot/config/plugins/nvidia-driver/settings.cfg"
       fi
     else
-      LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | grep "$LAT_PRB_AVAIL")"
+      LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | grep "$LAT_NFB_V")"
     fi
+  fi
+elif [ "${SET_DRV_V}" == "latest_nos" ]; then
+  if [ -z "$LAT_NOS_AVAIL" ]; then
+    if [ -z "${CUR_V}" ]; then
+      echo
+      echo "-----ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR - ERROR------"
+      echo "----Can't get Nvidia Open Source version and found no installed local driver----"
+      echo "-----Please wait for an hour and try it again, if it then also fails please-----"
+      echo "------go to the Support Thread on the Unraid forums and make a post there!------"
+      exit 1
+    else
+      export PACKAGE="nvidia"
+      LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
+    fi
+  else
+    LAT_PACKAGE=$PACKAGE-$LAT_NOS_AVAIL-$KERNEL_V-1.txz
   fi
 else
   if [ -z "$DRIVER_AVAIL" ]; then
@@ -185,7 +209,7 @@ else
       echo "------go to the Support Thread on the Unraid forums and make a post there!------"
       exit 1
     else
-      LAT_PACKAGE="${CUR_V}"
+      LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   else
     LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | grep "$SET_DRV_V")"
@@ -202,7 +226,7 @@ fi
 check
 
 #Check for old packages that are not suitable for this Kernel and not suitable for the current Nvidia driver version
-rm -f $(ls -d /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/* 2>/dev/null | grep -v "${KERNEL_V%%-*}")
+rm -rf $(ls -d /boot/config/plugins/nvidia-driver/packages/* 2>/dev/null | grep -v "${KERNEL_V%%-*}")
 rm -f $(ls /boot/config/plugins/nvidia-driver/packages/${KERNEL_V%%-*}/* 2>/dev/null | grep -v "$LAT_PACKAGE")
 
 #Display message to reboot server both in Plugin and WebUI
