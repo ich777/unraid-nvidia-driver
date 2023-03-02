@@ -6,7 +6,7 @@
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "4fde228450e71277bba8a4a849cf56d9">
+  <!ENTITY md5       "465bb3864f6db910d521c6d95b9bed75">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
   <!ENTITY packages  "/boot/config/plugins/&name;/packages">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2023.03.02
+- Always show legacy driver version 470.xx on plugin page regardless of how many drivers are available for current Unraid version
 
 ###2022.10.05
 - Added Nvidia Open Source drivers (packages will be available after a bug in the Nvidia Open Source Kernel modules is fixed)
