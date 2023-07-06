@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2023.05.16">
+  <!ENTITY version   "2023.07.06">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2023.07.06
+- Change log level from nvidia-container-runtime from info to warning
 
 ###2023.05.16
 - Bugfix for download and update check from latest driver versions if minor version numbers consist either of two or three digit version numbers
@@ -347,6 +350,9 @@ else
     fi
   fi
 fi
+
+#Change log level from nvidia-container-runtime from info to warning if it isn't already set to warning
+sed -i "/log-level = \"info\"/c\log-level = \"warning\"" /etc/nvidia-container-runtime/config.toml
 
 #Check if Plugin Update Helper is installed and up to date
 if [ ! -f /usr/bin/plugin_update_helper ]; then
