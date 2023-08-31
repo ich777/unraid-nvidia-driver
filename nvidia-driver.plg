@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2023.07.06">
+  <!ENTITY version   "2023.08.31">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2023.08.31
+- If a legacy driver is choosen in the plugin settings and no local driver is found, download the newest available legacy driver
 
 ###2023.07.06
 - Change log level from nvidia-container-runtime from info to warning
@@ -190,7 +193,11 @@ if wget -q -nc --show-progress --progress=bar:force:noscroll -O "&packages;/${KE
     exit 1
   fi
   echo
-  sed -i '/driver_version=/c\driver_version=latest' "&plugin;/settings.cfg"
+  if [ "${LEGACY_DRV}" == "true" ]; then
+    sed -i "/driver_version=/c\driver_version=$(echo $LAT_PACKAGE | cut -d '-' -f2)" "&plugin;/settings.cfg"
+  else
+    sed -i '/driver_version=/c\driver_version=latest' "&plugin;/settings.cfg"
+  fi
   echo "----Successfully downloaded Nvidia ${OS}Driver Package v$(echo $LAT_PACKAGE | cut -d '-' -f2), please wait!----"
 else
   echo
@@ -201,7 +208,17 @@ fi
 }
 
 get_version() {
-LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V | tail -1)"
+#If SET_DRV_V is set to anything that starts with 47, fall back to the legacy driver as latest driver
+if [[ "${SET_DRV_V}" = 47* ]]; then
+  LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | grep "\-47" | sort -V | tail -1)"
+  if [ -z "${LAT_PACKAGE}" ]; then
+    LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V | tail -1)"
+  else
+    LEGACY_DRV="true"
+  fi
+else
+  LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V | tail -1)"
+fi
 if [ -z "$LAT_PACKAGE" ]; then
   if [ -z "$CUR_V" ]; then
     echo
