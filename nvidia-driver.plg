@@ -17,7 +17,7 @@
 <CHANGES>
 
 ###2023.08.31
-- If a legacy driver is choosen in the plugin settings and no local driver is found, download the newest available legacy driver on boot
+- If a legacy driver is chosen in the plugin settings and no local driver is found, download the newest available legacy driver on boot
 
 ###2023.07.06
 - Change log level from nvidia-container-runtime from info to warning
