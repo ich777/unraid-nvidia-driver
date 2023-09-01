@@ -122,7 +122,7 @@ elif [ "${SET_DRV_V}" == "latest_prb" ]; then
       LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   else
-    LAT_PRB_V="$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2) <(echo "$LAT_PRB_AVAIL") | sort -V | tail -1)"
+    LAT_PRB_V="$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2 | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}') <(echo "$LAT_PRB_AVAIL" | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}') | sort -V | tail -1 | awk -F '.' '{printf "%d.%02d.%02d\n", $1,$2,$3}' | awk '{sub(/\.0+$/,"")}1')"
     if [ -z "${LAT_PRB_V}" ]; then
       if [ -z "${CUR_V}" ]; then
         echo
@@ -133,7 +133,7 @@ elif [ "${SET_DRV_V}" == "latest_prb" ]; then
         exit 1
       else
         LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | tail -1)"
-        echo "---Can't find Nvidia Driver v${SET_DRV_V} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2)---"
+        echo "---Can't find latest Prodution Branch Nvidia Driver for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2)---"
         sed -i '/driver_version=/c\driver_version=latest' "/boot/config/plugins/nvidia-driver/settings.cfg"
       fi
     else
@@ -165,7 +165,7 @@ elif [ "${SET_DRV_V}" == "latest_nfb" ]; then
       LAT_PACKAGE=$PACKAGE-$CUR_V-$KERNEL_V-1.txz
     fi
   else
-    LAT_NFB_V="$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2) <(echo "$LAT_NFB_AVAIL") | sort -V | tail -1)"
+    LAT_NFB_V="$(comm -12 <(echo "$DRIVER_AVAIL" | cut -d '-' -f2 | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}') <(echo "$LAT_NFB_AVAIL" | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}') | sort -V | tail -1 | awk -F '.' '{printf "%d.%02d.%02d\n", $1,$2,$3}' | awk '{sub(/\.0+$/,"")}1')"
     if [ -z "${LAT_NFB_V}" ]; then
       if [ -z "${CUR_V}" ]; then
         echo
@@ -176,7 +176,7 @@ elif [ "${SET_DRV_V}" == "latest_nfb" ]; then
         exit 1
       else
         LAT_PACKAGE="$(echo "$DRIVER_AVAIL" | tail -1)"
-        echo "---Can't find Nvidia Driver v${SET_DRV_V} for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2)---"
+        echo "---Can't find latest Production Branch Nvidia Driver for your Kernel v${KERNEL_V%%-*} falling back to latest Nvidia Driver v$(echo $LAT_PACKAGE | cut -d '-' -f2)---"
         sed -i '/driver_version=/c\driver_version=latest' "/boot/config/plugins/nvidia-driver/settings.cfg"
       fi
     else

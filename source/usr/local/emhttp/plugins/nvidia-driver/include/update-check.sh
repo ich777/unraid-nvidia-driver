@@ -48,7 +48,7 @@ elif [ "${SET_DRV_V}" == "latest" ]; then
 elif [ "${SET_DRV_V}" == "latest_prb" ]; then
   AVAIL_V="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "$PACKAGE" | grep -E -v '\.md5$' | sort -V)"
   PRB_V="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep "PRB" | cut -d '=' -f2 | sort -V)"
-  LAT_PACKAGE="$(comm -12 <(echo "$(echo "$AVAIL_V" | cut -d '-' -f2)") <(echo "${PRB_V}") | tail -1)"
+  LAT_PACKAGE="$(comm -12 <(echo "$(echo "$AVAIL_V" | cut -d '-' -f2 | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}')") <(echo "${PRB_V}" | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}') | tail -1 | awk -F '.' '{printf "%d.%02d.%02d\n", $1,$2,$3}' | awk '{sub(/\.0+$/,"")}1')"
   if [ -z ${LAT_PACKAGE} ]; then
     logger "Nvidia-Driver-Plugin: Automatic update check failed, can't get latest Production Branch version number!"
     exit 1
@@ -58,7 +58,7 @@ elif [ "${SET_DRV_V}" == "latest_prb" ]; then
 elif [ "${SET_DRV_V}" == "latest_nfb" ]; then
   AVAIL_V="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "$PACKAGE" | grep -E -v '\.md5$' | sort -V)"
   NFB_V="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep "NFB" | cut -d '=' -f2 | sort -V)"
-  LAT_PACKAGE="$(comm -12 <(echo "$(echo "$AVAIL_V" | cut -d '-' -f2)") <(echo "${NFB_V}") | tail -1)"
+  LAT_PACKAGE="$(comm -12 <(echo "$(echo "$AVAIL_V" | cut -d '-' -f2 | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}')") <(echo "${NFB_V}" | awk -F '.' '{printf "%d.%03d.%d\n", $1,$2,$3}' | awk -F '.' '{printf "%d.%03d.%02d\n", $1,$2,$3}') | tail -1 | awk -F '.' '{printf "%d.%02d.%02d\n", $1,$2,$3}' | awk '{sub(/\.0+$/,"")}1')"
   if [ -z ${LAT_PACKAGE} ]; then
     logger "Nvidia-Driver-Plugin: Automatic update check failed, can't get latest New Feature Branch version number!"
     exit 1
@@ -70,7 +70,7 @@ elif [ "${SET_DRV_V}" == "latest_nos" ]; then
   if [ -z ${LAT_PACKAGE} ]; then
     logger "Nvidia-Driver-Plugin: Automatic update check failed, can't get latest Open Source Driver version number!"
     exit 1
-  elif [ "$(echo "$LAT_PACKAGE" | cut -d '-' -f2)" != "${INSTALLED_V}" ]; then
+  elif [ "$(echo "$LAT_PACKAGE" | cut -d '-' -f2 )" != "${INSTALLED_V}" ]; then
     download
   fi
 fi
