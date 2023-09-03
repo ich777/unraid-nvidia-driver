@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
   <!ENTITY author    "ich777">
-  <!ENTITY version   "2023.08.31">
+  <!ENTITY version   "2023.09.03">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2023.09.03
+- Fix for Unraid 6.12.4 config.toml
 
 ###2023.08.31
 - If a legacy driver is chosen in the plugin settings and no local driver is found, download the newest available legacy driver on boot
@@ -368,6 +371,16 @@ else
       wget -q -T 5 -O &plugin;/plugin_update_helper "https://raw.githubusercontent.com/ich777/unraid-plugin_update_helper/master/plugin_update_helper"
     fi
   fi
+fi
+
+#Fix if config.toml is missing
+if [ ! -f /etc/nvidia-container-runtime/config.toml ]; then
+  if [ ! -d /etc/nvidia-container-runtime ]; then
+    mkdir -p /etc/nvidia-container-runtime
+  fi
+  touch /etc/nvidia-container-runtime/config.toml
+  echo '[nvidia-container-runtime]
+log-level = "warning"' > /etc/nvidia-container-runtime/config.toml
 fi
 
 #Change log level from nvidia-container-runtime from info to warning if it isn't already set to warning
