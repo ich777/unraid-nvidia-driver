@@ -82,7 +82,7 @@ tee $TMP_DIR/$VERSION/install/slack-desc <<EOF
 $PLUGIN_NAME: $PLUGIN_NAME Package contents:
 $PLUGIN_NAME:
 $PLUGIN_NAME: Nvidia-Driver v${NV_DRV_V}
-$PLUGIN_NAME: libnvidia-container v{LIBNVIDIA_CONTAINER_V}
+$PLUGIN_NAME: libnvidia-container v${LIBNVIDIA_CONTAINER_V}
 $PLUGIN_NAME: nvidia-container-runtime v${NVIDIA_CONTAINER_RUNTIME_V}
 $PLUGIN_NAME: nvidia-container-toolkit v${CONTAINER_TOOLKIT_V}
 $PLUGIN_NAME:
