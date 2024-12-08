@@ -41,6 +41,9 @@ if (empty($cur_drv_v)) {
     $cur_drv_v = "ERROR: No driver found!";
   }
 }
+
+//Get Unraid driver version
+$unraid_version = parse_ini_file('/etc/unraid-version');
 ?>
 
 <script>
@@ -124,7 +127,7 @@ table tbody td {
                     <p><b><font color = "tomato">New Feature Branch</font>:</b> <i>Not found for this unRAID version!</i></p>
                     <? endif; ?>
                     <? if (isset($latest_nos_v ) === true && trim($latest_nos_v ) !== ''): ?>
-                    <p><input type="radio" name="drv_version" value="latest_nos" <?php echo ( $selected_v == "latest_nos") ? 'checked="checked"' : ''; ?><b><font color = "blue"><b>Open Source Driver</font>:</b> <?php echo "v$latest_nos_v"; ?><em><b> - Please see readme below!</b></em></p>
+                    <p><input type="radio" name="drv_version" value="latest_nos" <?php echo ( $selected_v == "latest_nos") ? 'checked="checked"' : ''; ?><b><font color = "blue"><b>Open Source Driver</font>:</b> <?php echo "v$latest_nos_v"; ?><em><? echo (version_compare($unraid_version['version'], '7.0.0-rc.1.1', '<')) ? '<b> - Please see readme below!</b></em>' : ''; ?></p>
                     <? else: ?>
                     <p><b><font color = "blue">Open Source Driver</font>:</b> <i>Not found for this unRAID version!</i></p>
                     <? endif; ?>
@@ -164,8 +167,14 @@ table tbody td {
 		  <li><b>latest</b> - will always download the latest driver version available regardless of the branch</li><br>
 		  <li><b>Production Branch</b>  - This is the long lifecycle (i.e., multiple releases in a branch over a single year period) driver branch providing ISV Certification, optimal stability and performance, and regular security updates for NVIDIA RTX/Quadro professional customers. This driver was previously named, Optimal Driver for Enterprise (ODE), and is most commonly deployed in production systems at enterprises.</li><br>
 		  <li><b>New Feature Branch</b>  - This is a short lived branch driver (i.e., 1-2 releases per branch only) where new NVIDIA RTX/Quadro features are introduced and made available between Production Branch releases. New Feature Branch drivers, previously named, Quadro New Feature (QNF), typically provide support for new operating systems, third party hardware, and game engines.</li><br>
-		  <li><b>Open Source Driver</b>  - This package includes the Open Source Kernel modules and the libraries/execuatables from the proprietary Nvidia driver package.<br><b>Supported GPUs:</b> This driver package only supports Turing based cards and newer!<br><b><font color = "red">ATTENTION:</font></b> If you want to use the Open Source driver with GeForce and/or Workstation cards you have to create the file "<code>/boot/config/modprobe.d/nvidia.conf</code>" on your USB boot device with the contents, before you reboot your server:<br><code>options nvidia NVreg_OpenRmEnableUnsupportedGpus=1</code><br><p><em>For more information see <a href="https://us.download.nvidia.com/XFree86/Linux-x86_64/515.76/README/kernel_open.html">here</a>.</em></p></li>
-		  </p></ul>
+		  <li><b>Open Source Driver</b>  - This package includes the Open Source Kernel modules and the libraries/execuatables from the proprietary Nvidia driver package.
+		  <br><b>Supported GPUs:</b> This driver package only supports Turing based cards and newer!
+		  <?php
+            if(version_compare($unraid_version['version'], '7.0.0-rc.1.1', '<')) {
+              echo '<br><b><font color = "red">ATTENTION:</font></b> If you want to use the Open Source driver with GeForce and/or Workstation cards you have to create the file "<code>/boot/config/modprobe.d/nvidia.conf</code>" on your USB boot device with the contents, before you reboot your server:<br><code>options nvidia NVreg_OpenRmEnableUnsupportedGpus=1</code><br><p><em>For more information see <a href="https://us.download.nvidia.com/XFree86/Linux-x86_64/515.76/README/kernel_open.html">here</a>.</em></p>';
+            }
+		  ?>
+		  </li></p></ul>
 		  <br/>
 	</table>
 </div>
