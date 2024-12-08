@@ -127,7 +127,7 @@ table tbody td {
                     <p><b><font color = "tomato">New Feature Branch</font>:</b> <i>Not found for this unRAID version!</i></p>
                     <? endif; ?>
                     <? if (isset($latest_nos_v ) === true && trim($latest_nos_v ) !== ''): ?>
-                    <p><input type="radio" name="drv_version" value="latest_nos" <?php echo ( $selected_v == "latest_nos") ? 'checked="checked"' : ''; ?><b><font color = "blue"><b>Open Source Driver</font>:</b> <?php echo "v$latest_nos_v"; ?><em><? echo (version_compare($unraid_version['version'], '7.0.0-rc.1.1', '<')) ? '<b> - Please see readme below!</b></em>' : ''; ?></p>
+                    <p><input type="radio" name="drv_version" value="latest_nos" <?php echo ( $selected_v == "latest_nos") ? 'checked="checked"' : ''; ?><b><font color = "blue"><b>Open Source Driver</font>:</b> <?php echo "v$latest_nos_v"; ?><? echo (version_compare($unraid_version['version'], '7.0.0-rc.1.1', '<')) ? '<em><b> - Please see readme below!</b></em>' : ''; ?></p>
                     <? else: ?>
                     <p><b><font color = "blue">Open Source Driver</font>:</b> <i>Not found for this unRAID version!</i></p>
                     <? endif; ?>
