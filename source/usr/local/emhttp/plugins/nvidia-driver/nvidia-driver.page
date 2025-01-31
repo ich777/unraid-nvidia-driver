@@ -119,17 +119,17 @@ table tbody td {
                     <? if (isset($latest_prb_v ) === true && trim($latest_prb_v ) !== ''): ?>
                     <p><input type="radio" name="drv_version" value="latest_prb" <?php echo ( $selected_v == "latest_prb") ? 'checked="checked"' : ''; ?><b><font color = "green"><b>Production Branch</font>:</b>  <?php echo "v$latest_prb_v"; ?> </p>
                     <? else: ?>
-                    <p><b><font color = "green">Production Branch</font>:</b> <i>Not found for this unRAID version!</i></p>
+                    <p><b><font color = "green">Production Branch</font>:</b> <i>Not found for this Unraid version!</i></p>
                     <? endif; ?>
                     <? if (isset($latest_nfb_v ) === true && trim($latest_nfb_v ) !== ''): ?>
                     <p><input type="radio" name="drv_version" value="latest_nfb" <?php echo ( $selected_v == "latest_nfb") ? 'checked="checked"' : ''; ?><b><font color = "tomato"><b>New Feature Branch</font>:</b> <?php echo "v$latest_nfb_v"; ?></p>
                     <? else: ?>
-                    <p><b><font color = "tomato">New Feature Branch</font>:</b> <i>Not found for this unRAID version!</i></p>
+                    <p><b><font color = "tomato">New Feature Branch</font>:</b> <i>Not found for this Unraid version!</i></p>
                     <? endif; ?>
                     <? if (isset($latest_nos_v ) === true && trim($latest_nos_v ) !== ''): ?>
                     <p><input type="radio" name="drv_version" value="latest_nos" <?php echo ( $selected_v == "latest_nos") ? 'checked="checked"' : ''; ?><b><font color = "blue"><b>Open Source Driver</font>:</b> <?php echo "v$latest_nos_v"; ?><? echo (version_compare($unraid_version['version'], '7.0.0-rc.1.1', '<')) ? '<em><b> - Please see readme below!</b></em>' : ''; ?></p>
                     <? else: ?>
-                    <p><b><font color = "blue">Open Source Driver</font>:</b> <i>Not found for this unRAID version!</i></p>
+                    <p><b><font color = "blue">Open Source Driver</font>:</b> <i>Not found for this Unraid version!</i></p>
                     <? endif; ?>
                 </td>
               </tr>
