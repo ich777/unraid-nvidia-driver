@@ -9,16 +9,16 @@ if [ -f /tmp/nvidia_driver ]; then
   FILETIME=$(stat /tmp/nvidia_driver -c %Y)
   DIFF=$(expr $CURENTTIME - $FILETIME)
   if [ $DIFF -gt $CHK_TIMEOUT ]; then
-    DRIVERS="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | sort -V)"
+    DRIVERS="$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | sort -V)"
     echo -n "$(grep ${PACKAGE} <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
     echo -n "$(grep nvos <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -1)" > /tmp/nvos_driver
-    echo -n "$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
+    echo -n "$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
     if [ ! -s /tmp/nvidia_driver ]; then
       echo -n "$(modinfo nvidia | grep "version:" | awk '{print $2}' | head -1)" > /tmp/nvidia_driver
     fi
   fi
 else
-  DRIVERS="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | sort -V)"
+  DRIVERS="$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | sort -V)"
   echo -n "$(grep ${PACKAGE} <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvidia_driver
   echo -n "$(grep nvos <<< "$DRIVERS" | awk -F "-" '{print $2}' | sort -V | tail -10)" > /tmp/nvos_driver
   if [ ! -s /tmp/nvidia_driver ]; then

@@ -6,13 +6,13 @@ export SET_DRV_V="$(grep "driver_version" "/boot/config/plugins/nvidia-driver/se
 if [ "${SET_DRV_V}" == "latest_nos" ]; then
   export PACKAGE="nvos"
   export OS="Open Source "
-  LAT_NOS_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | grep "${PACKAGE}" | awk -F "-" '{print $2}' | sort -V | tail -1)"
+  LAT_NOS_AVAIL="$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E -v '\.md5$' | grep "${PACKAGE}" | awk -F "-" '{print $2}' | sort -V | tail -1)"
 else
   export PACKAGE="nvidia"
-  export DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E ${PACKAGE} | grep -E -v '\.md5$' | sort -V)"
+  export DRIVER_AVAIL="$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep -E ${PACKAGE} | grep -E -v '\.md5$' | sort -V)"
   export BRANCHES="$(wget -qO- https://raw.githubusercontent.com/ich777/versions/master/nvidia_versions | grep -v "UPDATED")"
 fi
-export DL_URL="https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}"
+export DL_URL="https://github.com/unraid/unraid-nvidia-driver/releases/download/${KERNEL_V}"
 export CUR_V="$(nvidia-smi | grep NVIDIA-SMI | cut -d ' ' -f3)"
 
 #Download Nvidia Driver Package
