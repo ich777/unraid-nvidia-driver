@@ -1,12 +1,12 @@
 <?xml version='1.0' standalone='yes'?>
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "nvidia-driver">
-  <!ENTITY author    "ich777">
-  <!ENTITY version   "2024.12.08">
+  <!ENTITY author    "unraid">
+  <!ENTITY version   "2025.02.03">
   <!ENTITY launch    "Settings/nvidia-driver">
   <!ENTITY gitURL    "https://github.com/&author;/unraid-&name;/raw/master">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY md5       "e6ec2dd2f61754b62b5eabb87324f61c">
+  <!ENTITY md5       "fbdaa1ed52a2ade55e04ad281bb096b8">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
   <!ENTITY packages  "/boot/config/plugins/&name;/packages">
@@ -15,6 +15,9 @@
 <PLUGIN  name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="6.9.0-beta31" support="https://forums.unraid.net/topic/98978-plugin-nvidia-driver/">
 
 <CHANGES>
+
+###2025.02.03
+- Switch repo from ich777 to unraid
 
 ###2024.12.08
 - Display Readme and modprobe warning for OpenSource driver only up to Unraid 7.0.0-rc.1
@@ -67,7 +70,7 @@
 - Bugfix for automatic update, download URL was missing
 
 ###2022.07.22
-- Necessary changes for unRAID 6.11+
+- Necessary changes for Unraid 6.11+
 - Plugin page improvements
 - Cleanup
 
@@ -87,16 +90,16 @@
 - Fixed plugin to escape variables properly
 
 ###2021.09.15
-- Added message to New Feature and Production Branch if no driver package is found for current unRAID version
+- Added message to New Feature and Production Branch if no driver package is found for current Unraid version
 
 ###2021.07.30
 - Bugfix, thanks to cybrnook
 
 ###2021.07.29
-- Added Plugin Update Helper when up-/downgrading unRAID version
+- Added Plugin Update Helper when up-/downgrading Unraid version
 
 ###2021.06.23
-- Fixed error message on boot after upgrade to newer unRAID version
+- Fixed error message on boot after upgrade to newer Unraid version
 - Corrected a few typos
 
 ###2021.06.23
@@ -122,7 +125,7 @@
 - Driver numbers file is updated now once every 5 minutes if the Plugin page is accessed several times within a short period of time
 
 ###2021.03.17
-- Added detection if unRAID is booted into GUI-Mode
+- Added detection if Unraid is booted into GUI-Mode
 
 ###2021.03.16
 - Added option to disable creation of xorg.conf file - requested by TechGeek01
@@ -187,7 +190,7 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version
 **Nvidia Driver**
 
 This plugin will install the Nvidia drivers to utilize your Nvidia graphics card in your Docker container(s).
-This plugin satisfies installation prerequisites of the GPU Statistics plugin from Community Apps. With both plugins installed you can display Nvidia GPU utilization on the unRAID Dashboard.
+This plugin satisfies installation prerequisites of the GPU Statistics plugin from Community Apps. With both plugins installed you can display Nvidia GPU utilization on the Unraid Dashboard.
 </INLINE>
 </FILE>
 
@@ -223,14 +226,14 @@ fi
 get_version() {
 #If SET_DRV_V is set to anything that starts with 47, fall back to the legacy driver as latest driver
 if [[ "${SET_DRV_V}" = 47* ]]; then
-  LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | grep "\-47" | sort -V | tail -1)"
+  LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | grep "\-47" | sort -V | tail -1)"
   if [ -z "${LAT_PACKAGE}" ]; then
-    LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V | tail -1)"
+    LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V | tail -1)"
   else
     LEGACY_DRV="true"
   fi
 else
-  LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/ich777/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V | tail -1)"
+  LAT_PACKAGE="$(wget -qO- https://api.github.com/repos/unraid/unraid-nvidia-driver/releases/tags/${KERNEL_V} | jq -r '.assets[].name' | grep "${PACKAGE}" | grep -E -v '\.md5$' | sort -V | tail -1)"
 fi
 if [ -z "$LAT_PACKAGE" ]; then
   if [ -z "$CUR_V" ]; then
@@ -310,7 +313,7 @@ if [ "${SET_DRV_V}" == "latest_nos" ]; then
 else
   export PACKAGE="nvidia"
 fi
-DL_URL="https://github.com/ich777/unraid-nvidia-driver/releases/download/${KERNEL_V}"
+DL_URL="https://github.com/unraid/unraid-nvidia-driver/releases/download/${KERNEL_V}"
 UPDATE_CHECK="$(grep "update_check" &plugin;/settings.cfg | head -1 | cut -d '=' -f2)"
 
 if [ ! -d "&packages;/${KERNEL_V%%-*}" ]; then
